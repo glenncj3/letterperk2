@@ -1,3 +1,31 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@keyframes tile-fall {
+  0% {
+    transform: translateY(-200%) scale(0.4);
+    opacity: 0;
+  }
+  50% {
+    transform: translateY(0) scale(0.7);
+    opacity: 1;
+  }
+  70% {
+    transform: translateY(2%) scale(0.95);
+  }
+  85% {
+    transform: translateY(-1%) scale(1.02);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@layer utilities {
+  .animate-tile-fall {
+    animation: tile-fall 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    position: relative;
+  }
+}

@@ -6,10 +6,13 @@ interface TileProps {
   tile: TileType;
   isSelected: boolean;
   onClick: () => void;
+  isNew?: boolean;
+  animationDelay?: number;
 }
 
-export const Tile = memo(function Tile({ tile, isSelected, onClick }: TileProps) {
+export const Tile = memo(function Tile({ tile, isSelected, onClick, isNew = false, animationDelay = 0 }: TileProps) {
   const [showTooltip, setShowTooltip] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(isNew);
   const timeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -19,6 +22,20 @@ export const Tile = memo(function Tile({ tile, isSelected, onClick }: TileProps)
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (isNew) {
+      setIsAnimating(true);
+      // Animation duration is ~600ms, so clear the flag after that
+      const timer = setTimeout(() => {
+        setIsAnimating(false);
+      }, 600 + animationDelay);
+      return () => clearTimeout(timer);
+    } else {
+      // If isNew becomes false, stop animating immediately
+      setIsAnimating(false);
+    }
+  }, [isNew, animationDelay]);
 
   const handleMouseDown = () => {
     if (tile.bonusType) {
@@ -74,8 +91,13 @@ export const Tile = memo(function Tile({ tile, isSelected, onClick }: TileProps)
           ${getBonusStyles()}
           ${isSelected ? (tile.bonusType ? 'scale-95' : 'bg-gray-300 scale-95') : tile.bonusType ? 'hover:scale-105' : 'bg-white hover:scale-105'}
           shadow-lg pb-0.5
+          ${isAnimating ? 'animate-tile-fall' : ''}
         `}
-        style={{ fontSize: 'clamp(1rem, 4vw, 2rem)' }}
+        style={{ 
+          fontSize: 'clamp(1rem, 4vw, 2rem)',
+          animationDelay: isAnimating ? `${animationDelay}ms` : undefined,
+          zIndex: isAnimating ? 10 : 1
+        }}
         aria-label={`Letter ${tile.letter}, ${tile.points} points${tile.bonusType ? `, ${tile.bonusType} bonus` : ''}`}
       >
         <span className="relative font-bold text-gray-900 leading-none -translate-y-px">
