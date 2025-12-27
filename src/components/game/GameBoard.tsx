@@ -28,7 +28,7 @@ export function GameBoard() {
 
   return (
     <div className="w-full max-w-sm mx-auto px-4">
-      <div className="bg-gray-100 rounded-2xl p-2.5">
+      <div className="bg-gray-200 rounded-2xl p-2.5">
         <div className="grid grid-cols-3 gap-2">
           {Array.from({ length: GRID_COLS }).map((_, col) => (
             <div key={col} className="flex flex-col gap-2">

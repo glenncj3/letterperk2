@@ -22,7 +22,7 @@ export function GameControls() {
           `}
         >
           <RefreshCw className="w-4 h-4" />
-          Refresh ({state.refreshUsed ? 0 : 1})
+          Redraw ({state.refreshUsed ? 0 : 1})
         </button>
 
         <button

@@ -23,7 +23,7 @@ A word puzzle game where players spell words using letter tiles with bonus multi
 - Mode selector (Daily/Casual)
 - Game over modal with score breakdown
 - How to Play modal with bonus explanations
-- Refresh tiles feature (one-time use)
+- Redraw tiles feature (one-time use)
 
 ### Database Integration
 - Supabase database with 3 tables:

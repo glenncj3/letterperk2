@@ -14,7 +14,7 @@ export function GameHeader({ onHelpClick }: GameHeaderProps) {
         <h1 className="text-2xl font-bold text-gray-900">LetterPerk</h1>
 
         <div className="flex items-center gap-1.5">
-          <div className="bg-gray-100 rounded-lg w-12 h-12 flex flex-col items-center justify-center">
+          <div className="bg-gray-200 rounded-lg w-12 h-12 flex flex-col items-center justify-center">
             <div className="text-xl font-bold text-gray-900 text-center leading-tight">
               {state.totalScore}
             </div>
@@ -23,7 +23,7 @@ export function GameHeader({ onHelpClick }: GameHeaderProps) {
             </div>
           </div>
 
-          <div className="bg-gray-100 rounded-lg w-12 h-12 flex flex-col items-center justify-center">
+          <div className="bg-gray-200 rounded-lg w-12 h-12 flex flex-col items-center justify-center">
             <div className="text-xl font-bold text-gray-900 text-center leading-tight">
               {state.wordsRemaining}
             </div>
@@ -66,7 +66,7 @@ export function GameHeader({ onHelpClick }: GameHeaderProps) {
 
           <button
             onClick={onHelpClick}
-            className="bg-gray-100 rounded-lg w-10 h-12 flex items-center justify-center hover:bg-gray-200 transition-colors"
+            className="bg-gray-200 rounded-lg w-10 h-12 flex items-center justify-center hover:bg-gray-300 transition-colors"
             aria-label="Help"
           >
             <HelpCircle className="w-6 h-6 text-gray-600" />

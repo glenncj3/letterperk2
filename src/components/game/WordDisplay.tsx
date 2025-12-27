@@ -12,8 +12,7 @@ export function WordDisplay() {
       <div className="text-center min-h-[88px] flex flex-col justify-center">
         {!hasSelectedTiles ? (
           <div className="text-gray-400 italic text-xs">
-            Tap and hold to read the color perks, then tap any letters to spell words.
-            Perks last all game, so drop your letters accordingly!
+            Tap and hold to read your perks. Tap any letters to spell words.
           </div>
         ) : (
           <>

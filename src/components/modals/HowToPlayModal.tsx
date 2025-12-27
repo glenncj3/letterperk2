@@ -27,26 +27,25 @@ export function HowToPlayModal({ isOpen, onClose }: HowToPlayModalProps) {
           <section>
             <h3 className="text-xl font-semibold text-gray-900 mb-3">Objective</h3>
             <p className="text-gray-700">
-              Spell 4 valid words using letter tiles to maximize your score.
-              Each word must be at least 2 letters long.
+              Leverage letters' points and perks to spell high-scoring words!
             </p>
           </section>
 
           <section>
             <h3 className="text-xl font-semibold text-gray-900 mb-3">How to Play</h3>
             <ol className="list-decimal list-inside space-y-2 text-gray-700">
-              <li>Tap tiles to select letters and form a word</li>
-              <li>Tap the last selected tile again to deselect it</li>
-              <li>Use the Submit button when you have a valid word</li>
-              <li>Complete 4 words to finish the game</li>
+              <li>Each game, spell the required number of words</li>
+              <li>Tap letters to spell words</li>
+              <li>Used letters get replaced by new ones</li>
+              <li>In a bind? Redraw all tiles!</li>
             </ol>
           </section>
 
           <section>
             <h3 className="text-xl font-semibold text-gray-900 mb-3">Bonus Perks</h3>
             <p className="text-gray-700 mb-3">
-              Some tiles have special bonus perks (shown by colored borders/backgrounds).
-              Long-press any bonus tile to see what it does!
+              Some tiles have special bonus perks.
+              Tap and hold any bonus tile to see what it does!
             </p>
             <div className="space-y-3">
               {Object.entries(BONUS_COLORS).map(([type, config]) => (
@@ -61,23 +60,6 @@ export function HowToPlayModal({ isOpen, onClose }: HowToPlayModalProps) {
             </div>
           </section>
 
-          <section>
-            <h3 className="text-xl font-semibold text-gray-900 mb-3">Special Features</h3>
-            <ul className="list-disc list-inside space-y-2 text-gray-700">
-              <li><strong>Refresh Tiles:</strong> Use once per game to redraw all tiles</li>
-              <li><strong>Gravity:</strong> Tiles fall down when words are removed</li>
-              <li><strong>Column Sequences:</strong> Each column refills from its own sequence</li>
-            </ul>
-          </section>
-
-          <section>
-            <h3 className="text-xl font-semibold text-gray-900 mb-3">Scoring</h3>
-            <p className="text-gray-700">
-              Your score is calculated from the point values of the letters you use,
-              plus any bonus perks. The Purple bonus doubles your total word score
-              (applied after all other bonuses).
-            </p>
-          </section>
         </div>
       </div>
     </div>
