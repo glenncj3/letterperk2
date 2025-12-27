@@ -31,12 +31,6 @@ export function calculateScore(
         }
         break;
 
-      case 'yellow':
-        if (yellowCount === 2) {
-          bonuses.push({ type: 'yellow', value: 6 });
-        }
-        break;
-
       case 'blue':
         if (index === 0) {
           bonuses.push({ type: 'blue', value: 4 });
@@ -50,6 +44,11 @@ export function calculateScore(
         break;
     }
   });
+
+  // Yellow bonus: points equal to the square of the number of yellows used
+  if (yellowCount > 0) {
+    bonuses.push({ type: 'yellow', value: yellowCount * yellowCount });
+  }
 
   const additiveBonus = bonuses.reduce((sum, bonus) => sum + bonus.value, 0);
   let finalScore = baseScore + additiveBonus;

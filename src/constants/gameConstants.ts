@@ -105,7 +105,7 @@ export const BONUS_COLORS = {
     border: 'border-yellow-400',
     text: 'text-yellow-600',
     name: 'Top Pair',
-    description: '+6 points (both yellows)'
+    description: '+1 per yellow (squared)'
   },
   blue: {
     bg: 'bg-blue-500',
