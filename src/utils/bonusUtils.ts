@@ -32,14 +32,8 @@ export function calculateScore(
         break;
 
       case 'blue':
-        if (index === 0) {
+        if (index === 0 || index === selectedTiles.length - 1) {
           bonuses.push({ type: 'blue', value: 4 });
-        }
-        break;
-
-      case 'black':
-        if (index === selectedTiles.length - 1) {
-          bonuses.push({ type: 'black', value: 4 });
         }
         break;
     }

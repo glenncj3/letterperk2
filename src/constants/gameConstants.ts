@@ -13,12 +13,11 @@ export const PURPLE_BONUS_MIN_LENGTH = 7;
 export const RED_BONUS_MAX_LENGTH = 4;
 
 export const DEFAULT_BONUS_CONFIG: BonusConfig[] = [
-  { type: 'green', minCount: 3, maxCount: 3},
-  { type: 'purple', minCount: 3, maxCount: 3},
-  { type: 'red', minCount: 3, maxCount: 3},
-  { type: 'yellow', minCount: 6, maxCount: 6},
-  { type: 'blue', minCount: 3, maxCount: 3},
-  { type: 'black', minCount: 3, maxCount: 3},
+  { type: 'green', minCount: 5, maxCount: 5 },
+  { type: 'purple', minCount: 1, maxCount: 1 },
+  { type: 'red', minCount: 5, maxCount: 5 },
+  { type: 'yellow', minCount: 6, maxCount: 6 },
+  { type: 'blue', minCount: 5, maxCount: 5 },
 ];
 
 export const EFFECT_ENABLED = false;
@@ -112,13 +111,6 @@ export const BONUS_COLORS = {
     border: 'border-blue-500',
     text: 'text-blue-600',
     name: 'Starting Block',
-    description: '+4 points (first letter)'
-  },
-  black: {
-    bg: 'bg-gray-900',
-    border: 'border-gray-900',
-    text: 'text-gray-800',
-    name: 'Finish Line',
-    description: '+4 points (last letter)'
+    description: '+4 points (first or last letter)'
   }
 };

@@ -7,7 +7,6 @@ const BONUS_EMOJI_MAP: Record<BonusType, string> = {
     red: '🟥',
     yellow: '🟨',
     blue: '🟦',
-    black: '⬛',
 };
 
 // Grey square for normal letters

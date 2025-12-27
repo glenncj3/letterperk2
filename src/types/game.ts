@@ -8,11 +8,10 @@ export interface Tile {
   bonusType?: BonusType;
 }
 
-export type BonusType = 'green' | 'purple' | 'red' | 'yellow' | 'blue' | 'black';
+export type BonusType = 'green' | 'purple' | 'red' | 'yellow' | 'blue';
 
 export interface BonusConfig {
   type: BonusType;
-  weight: number;
   minCount?: number;
   maxCount?: number;
 }
