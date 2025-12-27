@@ -1,6 +1,7 @@
 import { Calendar, Shuffle, Trophy, Share2 } from 'lucide-react';
 import { useGameState } from '../../contexts/GameContext';
 import { generateShareText, copyToClipboard } from '../../utils/shareUtils';
+import { LeaderboardModal } from './LeaderboardModal';
 import { useState } from 'react';
 
 interface GameOverModalProps {
@@ -11,6 +12,7 @@ interface GameOverModalProps {
 export function GameOverModal({ isOpen, onPlayAgain }: GameOverModalProps) {
   const { state, actions } = useGameState();
   const [shareFeedback, setShareFeedback] = useState<string>('');
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
 
   if (!isOpen) return null;
 
@@ -38,14 +40,12 @@ export function GameOverModal({ isOpen, onPlayAgain }: GameOverModalProps) {
         <div className="bg-gray-100 rounded-xl p-6 mb-6">
           <div className="text-center mb-4">
             <div className="text-5xl font-bold text-gray-900">{state.totalScore}</div>
-            <div className="text-lg text-gray-600">Total Points</div>
           </div>
 
           <div className="space-y-2">
             {state.wordsCompleted.map((word, index) => (
-              <div key={index} className="flex justify-between items-center">
-                <span className="font-medium text-gray-900">{word.word}</span>
-                <span className="text-gray-600">{word.score} pts</span>
+              <div key={index} className="text-center">
+                <span className="font-medium text-gray-900">{word.word}: {word.score}</span>
               </div>
             ))}
           </div>
@@ -79,13 +79,18 @@ export function GameOverModal({ isOpen, onPlayAgain }: GameOverModalProps) {
           </button>
 
           <button
-            onClick={() => {}}
+            onClick={() => setShowLeaderboard(true)}
             className="py-4 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl transition-colors flex items-center justify-center"
           >
             <Trophy className="w-6 h-6" />
           </button>
         </div>
       </div>
+
+      <LeaderboardModal
+        isOpen={showLeaderboard}
+        onClose={() => setShowLeaderboard(false)}
+      />
     </div>
   );
 }
