@@ -13,11 +13,11 @@ export function GameControls() {
           onClick={actions.refreshTiles}
           disabled={state.refreshUsed || state.gameStatus !== 'playing'}
           className={`
-            flex-1 py-2.5 px-3 rounded-xl font-semibold text-white text-sm
+            flex-1 py-2.5 px-3 rounded-xl font-semibold text-sm
             transition-all duration-200 flex items-center justify-center gap-2
             ${state.refreshUsed || state.gameStatus !== 'playing'
-              ? 'bg-gray-300 cursor-not-allowed'
-              : 'bg-red-500 hover:bg-red-600 active:scale-95'
+              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              : 'bg-blue-500 hover:bg-blue-600 text-white active:scale-95'
             }
           `}
         >
