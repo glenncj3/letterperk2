@@ -1,5 +1,5 @@
 import { GameConfiguration, BonusConfig } from '../types/game';
-import { LETTER_DISTRIBUTION, DEFAULT_BONUS_CONFIG, GRID_COLS } from '../constants/gameConstants';
+import { LETTER_DISTRIBUTION, DEFAULT_BONUS_CONFIG, GRID_COLS, TILES_PER_COLUMN } from '../constants/gameConstants';
 
 export function seededRandom(seed: number): () => number {
   let state = seed;
@@ -16,6 +16,50 @@ function shuffleArray<T>(array: T[], random: () => number): T[] {
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
   return shuffled;
+}
+
+function ensureNoDuplicatesInFirstFour<T extends { letter: string }>(
+  sequence: T[],
+  random: () => number
+): T[] {
+  if (sequence.length < TILES_PER_COLUMN) {
+    return sequence;
+  }
+
+  const result = [...sequence];
+  const firstFour: T[] = [];
+  const usedLetters = new Set<string>();
+  const remaining = [...result];
+
+  // Build first 4 positions with unique letters
+  for (let i = 0; i < TILES_PER_COLUMN && remaining.length > 0; i++) {
+    // Find the first tile with a unique letter
+    let foundIndex = -1;
+    for (let j = 0; j < remaining.length; j++) {
+      if (!usedLetters.has(remaining[j].letter)) {
+        foundIndex = j;
+        break;
+      }
+    }
+
+    if (foundIndex >= 0) {
+      // Found a unique letter
+      firstFour.push(remaining[foundIndex]);
+      usedLetters.add(remaining[foundIndex].letter);
+      remaining.splice(foundIndex, 1);
+    } else {
+      // No unique letter available, take from remaining and swap with later position if needed
+      // This should be rare, but handle it by taking the first available
+      firstFour.push(remaining[0]);
+      remaining.splice(0, 1);
+    }
+  }
+
+  // Shuffle the remaining tiles
+  const shuffledRemaining = shuffleArray(remaining, random);
+
+  // Combine: first 4 unique letters, then the rest
+  return [...firstFour, ...shuffledRemaining];
 }
 
 export function generateGameConfiguration(seed: number): GameConfiguration {
@@ -56,8 +100,13 @@ export function generateGameConfiguration(seed: number): GameConfiguration {
     shuffleArray(sequence, random)
   );
 
+  // Ensure no duplicate letters in the first 4 tiles of each column
+  const constrainedSequences = shuffledColumnSequences.map(sequence =>
+    ensureNoDuplicatesInFirstFour(sequence, random)
+  );
+
   return {
-    columnSequences: shuffledColumnSequences,
+    columnSequences: constrainedSequences,
     bonusConfig: DEFAULT_BONUS_CONFIG,
     effects: []
   };

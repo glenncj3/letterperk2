@@ -1,5 +1,7 @@
 import { Calendar, Shuffle, Trophy, Share2 } from 'lucide-react';
 import { useGameState } from '../../contexts/GameContext';
+import { generateShareText, copyToClipboard } from '../../utils/shareUtils';
+import { useState } from 'react';
 
 interface GameOverModalProps {
   isOpen: boolean;
@@ -8,8 +10,23 @@ interface GameOverModalProps {
 
 export function GameOverModal({ isOpen, onPlayAgain }: GameOverModalProps) {
   const { state, actions } = useGameState();
+  const [shareFeedback, setShareFeedback] = useState<string>('');
 
   if (!isOpen) return null;
+
+  const handleShare = async () => {
+    const shareText = generateShareText(state);
+    if (shareText) {
+      const success = await copyToClipboard(shareText);
+      if (success) {
+        setShareFeedback('Copied to clipboard!');
+        setTimeout(() => setShareFeedback(''), 2000);
+      } else {
+        setShareFeedback('Failed to copy');
+        setTimeout(() => setShareFeedback(''), 2000);
+      }
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -50,10 +67,15 @@ export function GameOverModal({ isOpen, onPlayAgain }: GameOverModalProps) {
           </button>
 
           <button
-            onClick={() => {}}
-            className="py-4 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl transition-colors flex items-center justify-center"
+            onClick={handleShare}
+            className="py-4 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl transition-colors flex items-center justify-center relative"
           >
             <Share2 className="w-6 h-6" />
+            {shareFeedback && (
+              <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+                {shareFeedback}
+              </span>
+            )}
           </button>
 
           <button
