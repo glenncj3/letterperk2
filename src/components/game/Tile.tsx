@@ -67,7 +67,7 @@ export const Tile = memo(function Tile({ tile, isSelected, onClick, isNew = fals
       red: isSelected ? 'bg-red-300' : 'bg-red-100',
       yellow: isSelected ? 'bg-yellow-300' : 'bg-yellow-100',
       blue: isSelected ? 'bg-blue-300' : 'bg-blue-100',
-      black: isSelected ? 'bg-gray-400' : 'bg-gray-200'
+      black: isSelected ? 'bg-gray-500' : 'bg-gray-300'
     };
 
     const tint = tintMap[tile.bonusType];

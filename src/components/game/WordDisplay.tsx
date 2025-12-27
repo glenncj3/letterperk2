@@ -17,8 +17,18 @@ export function WordDisplay() {
         ) : (
           <>
             <div className="flex items-center justify-center gap-2 mb-2">
-              <div className="text-4xl font-bold text-gray-900 tracking-wider">
-                {state.currentWord}
+              <div className="text-4xl font-bold text-gray-900 tracking-wider flex items-center">
+                {state.currentWord.split('').map((letter, index) => (
+                  <span
+                    key={`${letter}-${index}`}
+                    className={state.isWordValid ? 'animate-letter-pulse' : ''}
+                    style={{
+                      animationDelay: state.isWordValid ? `${index * 100}ms` : undefined
+                    }}
+                  >
+                    {letter}
+                  </span>
+                ))}
               </div>
               <button
                 onClick={actions.clearSelection}
