@@ -8,7 +8,7 @@ export interface Tile {
   bonusType?: BonusType;
 }
 
-export type BonusType = 'green' | 'purple' | 'red' | 'yellow' | 'blue';
+export type BonusType = 'green' | 'purple' | 'red' | 'yellow' | 'blue' | 'black';
 
 export interface BonusConfig {
   type: BonusType;
@@ -92,7 +92,7 @@ export interface GameState {
 
   activeEffects: GameEffect[];
 
-  refreshUsed: boolean;
+  tradesAvailable: number; // Number of trades (redraws) available
   error: string | null;
   isLoading: boolean;
   gameStartedAt?: string; // ISO timestamp when game started

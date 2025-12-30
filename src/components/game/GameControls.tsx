@@ -16,7 +16,7 @@ export function GameControls() {
   }, []);
 
   const handleRedrawMouseDown = () => {
-    if (!state.refreshUsed && state.gameStatus === 'playing') {
+    if (state.tradesAvailable > 0 && state.gameStatus === 'playing') {
       redrawTimeoutRef.current = window.setTimeout(() => {
         setShowRedrawTooltip(true);
       }, 500);
@@ -65,7 +65,7 @@ export function GameControls() {
   };
 
   const canSubmit = state.isWordValid && state.selectedTiles.length >= 2;
-  const canRedraw = !state.refreshUsed && state.gameStatus === 'playing' && state.selectedTiles.length > 0;
+  const canRedraw = state.tradesAvailable > 0 && state.gameStatus === 'playing' && state.selectedTiles.length > 0;
 
   return (
     <div className="w-full max-w-[25.2rem] mx-auto px-4 pb-2 mt-4 flex-shrink-0">
@@ -82,13 +82,13 @@ export function GameControls() {
               w-full py-2.5 px-3 rounded-xl font-semibold text-sm
               transition-all duration-200 flex items-center justify-center gap-2
               ${canRedraw
-                ? 'bg-blue-500 hover:bg-blue-600 text-white active:scale-95'
+                ? 'bg-gray-500 hover:bg-gray-700 text-white active:scale-95'
                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
               }
             `}
           >
-            <RefreshCw className="w-4 h-4" />
-            Trade ({state.refreshUsed ? 0 : 1})
+            <RefreshCw className="w-4 h-4 drop-shadow-md" />
+            <span className="drop-shadow-md">Trade ({state.tradesAvailable})</span>
           </button>
           {showRedrawTooltip && (
             <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 z-50 pointer-events-none">
@@ -112,8 +112,8 @@ export function GameControls() {
             }
           `}
         >
-          <Send className="w-4 h-4" />
-          Submit
+          <Send className="w-4 h-4 drop-shadow-md" />
+          <span className="drop-shadow-md">Submit</span>
         </button>
       </div>
     </div>

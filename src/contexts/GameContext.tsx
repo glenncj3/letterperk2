@@ -30,7 +30,7 @@ const initialState: GameState = {
   wordsCompleted: [],
   wordsRemaining: MAX_WORDS_PER_GAME,
   activeEffects: [],
-  refreshUsed: false,
+  tradesAvailable: 1, // Start with 1 trade
   error: null,
   isLoading: true,
   gameStartedAt: undefined,
@@ -119,6 +119,10 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       const wordsRemaining = MAX_WORDS_PER_GAME - wordsCompleted.length;
       const gameStatus = wordsRemaining === 0 ? 'gameover' : 'playing';
 
+      // Count black bonuses used in this word (each black bonus gives +1 trade)
+      const blackBonusCount = action.word.tileBonuses.filter(b => b === 'black').length;
+      const newTradesAvailable = state.tradesAvailable + blackBonusCount;
+
       return {
         ...state,
         wordsCompleted,
@@ -131,6 +135,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         isWordValid: false,
         currentWordScore: { baseScore: 0, bonuses: [], finalScore: 0 },
         gameStatus,
+        tradesAvailable: newTradesAvailable,
       };
     }
 
@@ -138,7 +143,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       return {
         ...state,
         tiles: action.newTiles,
-        refreshUsed: true,
+        tradesAvailable: Math.max(0, state.tradesAvailable - 1), // Decrement trades
         selectedTiles: [],
         currentWord: '',
         isWordValid: false,
@@ -379,11 +384,14 @@ export function GameProvider({ children }: { children: ReactNode }) {
   }, [state]);
 
   const refreshTiles = useCallback(() => {
-    if (state.refreshUsed) return;
+    if (state.tradesAvailable <= 0) {
+      dispatch({ type: 'SET_ERROR', error: 'No trades available' });
+      return;
+    }
 
-    // Require at least one selected tile to redraw
+    // Require at least one selected tile to trade
     if (state.selectedTiles.length === 0) {
-      dispatch({ type: 'SET_ERROR', error: 'Select tiles to redraw' });
+      dispatch({ type: 'SET_ERROR', error: 'Select tiles to trade.' });
       return;
     }
 
@@ -422,8 +430,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
     const finalTiles = applyGravity(allTiles);
 
     dispatch({ type: 'REFRESH_TILES', newTiles: finalTiles });
-    dispatch({ type: 'SET_COLUMN_SEQUENCES', sequences: state.columnSequences, indices: newIndices });
-  }, [state.refreshUsed, state.selectedTiles, state.tiles, state.columnDrawIndices, state.columnSequences, state.puzzle, state.randomFunc]);
+    dispatch({ type: 'SET_COLUMN_SEQUENCES', sequences: state.columnSequences, indices: newIndices, randomFunc: state.randomFunc! });
+  }, [state.tradesAvailable, state.selectedTiles, state.tiles, state.columnDrawIndices, state.columnSequences, state.puzzle, state.randomFunc]);
 
   const setGameMode = useCallback(async (mode: GameMode) => {
     await initializeGame(mode);

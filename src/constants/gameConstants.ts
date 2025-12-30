@@ -18,6 +18,7 @@ export const DEFAULT_BONUS_CONFIG: BonusConfig[] = [
   { type: 'red', minCount: 1, maxCount: 1 },
   { type: 'yellow', minCount: 9, maxCount: 9 },
   { type: 'blue', minCount: 5, maxCount: 5 },
+  { type: 'black', minCount: 3, maxCount: 3 },
 ];
 
 export const EFFECT_ENABLED = false;
@@ -112,5 +113,12 @@ export const BONUS_COLORS = {
     text: 'text-blue-600',
     name: 'On the Edge',
     description: '+5 points (first or last letter)'
+  },
+  black: {
+    bg: 'bg-gray-900',
+    border: 'border-gray-900',
+    text: 'text-gray-800',
+    name: 'Black Market',
+    description: '+1 trade when used'
   }
 };
