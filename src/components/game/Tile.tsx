@@ -127,7 +127,7 @@ export const Tile = memo(function Tile({ tile, isSelected, onClick, isNew = fals
           ${isAnimating ? 'animate-tile-fall' : ''}
         `}
         style={{
-          fontSize: 'clamp(1.5rem, 5vw, 2rem)',
+          fontSize: 'clamp(1.75rem, 5vw, 2rem)',
           animationDelay: isAnimating ? `${animationDelay}ms` : undefined,
           zIndex: isAnimating ? 10 : 1
         }}
