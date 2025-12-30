@@ -89,13 +89,8 @@ export function LeaderboardModal({ isOpen, onClose }: LeaderboardModalProps) {
                                         <div className="w-8 h-8 flex items-center justify-center font-bold text-gray-700">
                                             {index + 1}
                                         </div>
-                                        <div>
-                                            <div className="font-semibold text-gray-900">
-                                                {entry.total_score} points
-                                            </div>
-                                            <div className="text-xs text-gray-500">
-                                                {entry.word_count} word{entry.word_count !== 1 ? 's' : ''}
-                                            </div>
+                                        <div className="font-semibold text-gray-900">
+                                            {entry.total_score}
                                         </div>
                                     </div>
                                 </div>
