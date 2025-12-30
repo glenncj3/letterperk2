@@ -127,7 +127,7 @@ export const Tile = memo(function Tile({ tile, isSelected, onClick, isNew = fals
           ${isAnimating ? 'animate-tile-fall' : ''}
         `}
         style={{
-          fontSize: 'clamp(1rem, 4vw, 2rem)',
+          fontSize: 'clamp(1.5rem, 5vw, 2rem)',
           animationDelay: isAnimating ? `${animationDelay}ms` : undefined,
           zIndex: isAnimating ? 10 : 1
         }}
@@ -135,7 +135,7 @@ export const Tile = memo(function Tile({ tile, isSelected, onClick, isNew = fals
       >
         <span className="relative font-bold text-gray-900 leading-none -translate-y-px">
           {tile.letter}
-          <sub className="absolute text-[0.4em] text-gray-600 font-normal ml-[0.15em]">{tile.points}</sub>
+          <sub className="absolute text-[0.5em] text-gray-600 font-normal ml-[0.15em]">{tile.points}</sub>
         </span>
       </button>
 

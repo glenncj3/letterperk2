@@ -2,6 +2,36 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Disable text selection and image copying on mobile */
+* {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Allow text selection in modals and input areas */
+input,
+textarea,
+[contenteditable="true"],
+.modal-content {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+/* Disable image dragging */
+img {
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
+  user-drag: none;
+}
+
 @keyframes tile-fall {
   0% {
     transform: translateY(-200%) scale(0.4);
