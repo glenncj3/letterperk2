@@ -84,41 +84,41 @@ export const BONUS_COLORS = {
     border: 'border-green-500',
     text: 'text-green-600',
     name: 'Extra, Extra',
-    description: '+1 point'
+    description: 'Use to scores +1 point'
   },
   purple: {
     bg: 'bg-purple-500',
     border: 'border-purple-500',
     text: 'text-purple-600',
     name: 'Big Bingo',
-    description: '2x score (7+ letters)'
+    description: 'Use to spell a word with 7 or more letters and double that word\'s score'
   },
   red: {
     bg: 'bg-red-500',
     border: 'border-red-500',
     text: 'text-red-600',
     name: 'Small Words',
-    description: '+10 points (≤4 letters)'
+    description: 'Use to spell a word with 4 or fewer letters for +10 points'
   },
   yellow: {
     bg: 'bg-yellow-400',
     border: 'border-yellow-400',
     text: 'text-yellow-600',
     name: 'Daisy Chain',
-    description: 'Square the quantity of yellows used'
+    description: 'Each yellow tile gains points equal to the total number of yellow tiles in that word'
   },
   blue: {
     bg: 'bg-blue-500',
     border: 'border-blue-500',
     text: 'text-blue-600',
     name: 'On the Edge',
-    description: '+5 points (first or last letter)'
+    description: 'Use as the first or last letter in a word for +5 points'
   },
   black: {
     bg: 'bg-gray-900',
     border: 'border-gray-900',
     text: 'text-gray-800',
     name: 'Black Market',
-    description: '+1 trade when used'
+    description: 'Use to get +1 Trade'
   }
 };
