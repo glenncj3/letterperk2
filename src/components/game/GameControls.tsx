@@ -55,10 +55,17 @@ export function GameControls() {
       }, 100);
       return;
     }
+    // Prevent action if button is disabled
+    if (!canRedraw) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
     actions.refreshTiles();
   };
 
   const canSubmit = state.isWordValid && state.selectedTiles.length >= 2;
+  const canRedraw = !state.refreshUsed && state.gameStatus === 'playing' && state.selectedTiles.length > 0;
 
   return (
     <div className="w-full max-w-[25.2rem] mx-auto px-4 pb-2 mt-4 flex-shrink-0">
@@ -66,7 +73,6 @@ export function GameControls() {
         <div className="relative flex-1">
           <button
             onClick={handleRedrawClick}
-            disabled={state.refreshUsed || state.gameStatus !== 'playing'}
             onMouseDown={handleRedrawMouseDown}
             onMouseUp={handleRedrawMouseUp}
             onMouseLeave={handleRedrawMouseLeave}
@@ -75,20 +81,20 @@ export function GameControls() {
             className={`
               w-full py-2.5 px-3 rounded-xl font-semibold text-sm
               transition-all duration-200 flex items-center justify-center gap-2
-              ${state.refreshUsed || state.gameStatus !== 'playing'
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                : 'bg-blue-500 hover:bg-blue-600 text-white active:scale-95'
+              ${canRedraw
+                ? 'bg-blue-500 hover:bg-blue-600 text-white active:scale-95'
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
               }
             `}
           >
             <RefreshCw className="w-4 h-4" />
-            Redraw ({state.refreshUsed ? 0 : 1})
+            Trade ({state.refreshUsed ? 0 : 1})
           </button>
           {showRedrawTooltip && (
             <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 z-50 pointer-events-none">
               <div className="bg-gray-900 text-white text-sm rounded-lg px-3 py-2 whitespace-nowrap shadow-xl">
-                <div className="font-semibold">Redraw Tiles</div>
-                <div className="text-xs text-gray-300">Replace all tiles with new ones</div>
+                <div className="font-semibold">Trade</div>
+                <div className="text-xs text-gray-300">Replace selected tiles with new ones</div>
               </div>
             </div>
           )}

@@ -381,23 +381,49 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const refreshTiles = useCallback(() => {
     if (state.refreshUsed) return;
 
-    const newTiles: Tile[] = [];
+    // Require at least one selected tile to redraw
+    if (state.selectedTiles.length === 0) {
+      dispatch({ type: 'SET_ERROR', error: 'Select tiles to redraw' });
+      return;
+    }
+
+    if (!state.puzzle || !state.randomFunc) {
+      dispatch({ type: 'SET_ERROR', error: 'Game not initialized' });
+      return;
+    }
+
+    // Remove selected tiles and keep the rest
+    const remainingTiles = state.tiles.filter(
+      tile => !state.selectedTiles.some(st => st.id === tile.id)
+    );
+
+    const freshTiles: Tile[] = [];
     const newIndices: [number, number, number] = [...state.columnDrawIndices];
 
+    // Calculate how many new tiles are needed per column
     for (let col = 0; col < GRID_COLS; col++) {
-      for (let row = 0; row < TILES_PER_COLUMN; row++) {
+      const columnTiles = remainingTiles.filter(t => t.col === col);
+      const tilesNeeded = TILES_PER_COLUMN - columnTiles.length;
+
+      // Draw new tiles from the sequence to fill the column
+      for (let i = 0; i < tilesNeeded; i++) {
         const sequence = state.columnSequences[col];
         const tileData = sequence[newIndices[col] % sequence.length];
         newIndices[col]++;
 
-        const tile = createTile(tileData.letter, tileData.points, row, col, tileData.bonusType);
-        newTiles.push(tile);
+        // Use negative row numbers so they sort last and go to top after gravity
+        const newTile = createTile(tileData.letter, tileData.points, -1 - i, col, tileData.bonusType);
+        freshTiles.push(newTile);
       }
     }
 
-    dispatch({ type: 'REFRESH_TILES', newTiles });
+    // Combine remaining tiles with new tiles and apply gravity
+    const allTiles = [...remainingTiles, ...freshTiles];
+    const finalTiles = applyGravity(allTiles);
+
+    dispatch({ type: 'REFRESH_TILES', newTiles: finalTiles });
     dispatch({ type: 'SET_COLUMN_SEQUENCES', sequences: state.columnSequences, indices: newIndices });
-  }, [state.refreshUsed, state.columnDrawIndices, state.columnSequences]);
+  }, [state.refreshUsed, state.selectedTiles, state.tiles, state.columnDrawIndices, state.columnSequences, state.puzzle, state.randomFunc]);
 
   const setGameMode = useCallback(async (mode: GameMode) => {
     await initializeGame(mode);

@@ -37,7 +37,7 @@ export function HowToPlayModal({ isOpen, onClose }: HowToPlayModalProps) {
               <li>Each game, spell the required number of words</li>
               <li>Tap letters to spell words</li>
               <li>Used letters get replaced by new ones</li>
-              <li>In a bind? Redraw all tiles!</li>
+              <li>In a bind? Trade in some tiles!</li>
             </ol>
           </section>
 

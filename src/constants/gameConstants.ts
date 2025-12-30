@@ -1,9 +1,9 @@
 import { BonusConfig, GameEffect } from '../types/game';
 
-export const GRID_ROWS = 4;
+export const GRID_ROWS = 3;
 export const GRID_COLS = 3;
-export const TILES_PER_DRAW = 12;
-export const TILES_PER_COLUMN = 4;
+export const TILES_PER_DRAW = 9;
+export const TILES_PER_COLUMN = 3;
 
 export const MAX_WORDS_PER_GAME = 4;
 export const MIN_WORD_LENGTH = 2;
