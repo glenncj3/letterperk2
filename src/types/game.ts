@@ -27,6 +27,7 @@ export interface CompletedWord {
   score: number;
   bonusesApplied: BonusType[];
   tileBonuses: (BonusType | null)[];
+  bonusBreakdown: Array<{ type: BonusType; value: number }>; // Full bonus breakdown with values
 }
 
 export interface ScoreBreakdown {
@@ -94,6 +95,7 @@ export interface GameState {
   refreshUsed: boolean;
   error: string | null;
   isLoading: boolean;
+  gameStartedAt?: string; // ISO timestamp when game started
 }
 
 export interface GameActions {

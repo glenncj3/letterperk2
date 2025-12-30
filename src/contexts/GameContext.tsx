@@ -33,6 +33,7 @@ const initialState: GameState = {
   refreshUsed: false,
   error: null,
   isLoading: true,
+  gameStartedAt: undefined,
 };
 
 type GameAction =
@@ -59,8 +60,13 @@ function gameReducer(state: GameState, action: GameAction): GameState {
     case 'SET_PUZZLE':
       return { ...state, puzzle: action.puzzle };
 
-    case 'SET_GAME_STATUS':
-      return { ...state, gameStatus: action.status };
+    case 'SET_GAME_STATUS': {
+      // Set game start time when status changes to 'playing'
+      const gameStartedAt = action.status === 'playing' && !state.gameStartedAt
+        ? new Date().toISOString()
+        : state.gameStartedAt;
+      return { ...state, gameStatus: action.status, gameStartedAt };
+    }
 
     case 'SET_TILES':
       return { ...state, tiles: action.tiles };
@@ -173,11 +179,34 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (state.gameStatus === 'gameover' && state.puzzle) {
-      const words = state.wordsCompleted.map((w, index) => ({
-        word: w.word,
-        score: w.score,
-        index: index + 1
-      }));
+      // Calculate duration if we have a start time
+      const durationSeconds = state.gameStartedAt 
+        ? Math.floor((Date.now() - new Date(state.gameStartedAt).getTime()) / 1000)
+        : undefined;
+
+      // Count total bonus tiles used across all words
+      const totalBonusTilesUsed = state.wordsCompleted.reduce((total, word) => {
+        return total + word.tileBonuses.filter(b => b !== null).length;
+      }, 0);
+
+      const words = state.wordsCompleted.map((w, index) => {
+        // Count bonus tiles in this word
+        const bonusTilesCount = w.tileBonuses.filter(b => b !== null).length;
+        
+        // Use the bonus breakdown with actual values
+        const bonuses = w.bonusBreakdown.map(b => ({
+          type: b.type,
+          value: b.value
+        }));
+
+        return {
+          word: w.word,
+          score: w.score,
+          index: index + 1,
+          bonuses,
+          bonusTilesCount
+        };
+      });
 
       logGameResult(
         state.puzzle.date,
@@ -185,10 +214,13 @@ export function GameProvider({ children }: { children: ReactNode }) {
         state.totalScore,
         state.wordsCompleted.length,
         state.gameMode,
-        words
+        words,
+        durationSeconds,
+        state.gameStartedAt,
+        totalBonusTilesUsed
       );
     }
-  }, [state.gameStatus, state.puzzle, state.totalScore, state.wordsCompleted, state.gameMode]);
+  }, [state.gameStatus, state.puzzle, state.totalScore, state.wordsCompleted, state.gameMode, state.gameStartedAt]);
 
   const initializeGame = useCallback(async (mode: GameMode, replay = false) => {
     dispatch({ type: 'SET_LOADING', isLoading: true });
@@ -283,6 +315,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       score: state.currentWordScore.finalScore,
       bonusesApplied: state.currentWordScore.bonuses.map(b => b.type),
       tileBonuses: state.selectedTiles.map(t => t.bonusType || null),
+      bonusBreakdown: state.currentWordScore.bonuses, // Full bonus breakdown with values
     };
 
     const remainingTiles = state.tiles.filter(

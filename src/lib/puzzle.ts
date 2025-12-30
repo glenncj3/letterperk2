@@ -54,7 +54,16 @@ export async function logGameResult(
   totalScore: number,
   wordCount: number,
   mode: 'daily' | 'casual',
-  words: Array<{ word: string; score: number; index: number }>
+  words: Array<{ 
+    word: string; 
+    score: number; 
+    index: number;
+    bonuses: Array<{ type: string; value: number }>;
+    bonusTilesCount: number;
+  }>,
+  durationSeconds?: number,
+  startedAt?: string,
+  totalBonusTilesUsed?: number
 ): Promise<void> {
   const supabase = getSupabase();
 
@@ -71,7 +80,10 @@ export async function logGameResult(
         seed,
         total_score: totalScore,
         word_count: wordCount,
-        mode
+        mode,
+        duration_seconds: durationSeconds ?? null,
+        started_at: startedAt ?? null,
+        total_bonus_tiles_used: totalBonusTilesUsed ?? null
       })
       .select()
       .single();
@@ -87,7 +99,9 @@ export async function logGameResult(
         puzzle_date: puzzleDate,
         submission_index: w.index,
         word: w.word,
-        score: w.score
+        score: w.score,
+        bonuses: w.bonuses,
+        bonus_tiles_count: w.bonusTilesCount
       }));
 
       const { error: wordsError } = await supabase
