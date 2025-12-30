@@ -14,6 +14,7 @@ export const Tile = memo(function Tile({ tile, isSelected, onClick, isNew = fals
   const [showTooltip, setShowTooltip] = useState(false);
   const [isAnimating, setIsAnimating] = useState(isNew);
   const timeoutRef = useRef<number | null>(null);
+  const tooltipShownRef = useRef(false);
 
   useEffect(() => {
     return () => {
@@ -38,9 +39,11 @@ export const Tile = memo(function Tile({ tile, isSelected, onClick, isNew = fals
   }, [isNew, animationDelay]);
 
   const handleMouseDown = () => {
+    tooltipShownRef.current = false;
     if (tile.bonusType) {
       timeoutRef.current = window.setTimeout(() => {
         setShowTooltip(true);
+        tooltipShownRef.current = true;
       }, 500);
     }
   };
@@ -55,6 +58,33 @@ export const Tile = memo(function Tile({ tile, isSelected, onClick, isNew = fals
   const handleMouseLeave = () => {
     handleMouseUp();
     setShowTooltip(false);
+    tooltipShownRef.current = false;
+  };
+
+  const handleClick = (e: React.MouseEvent) => {
+    // Prevent selection if tooltip was shown during this interaction
+    if (tooltipShownRef.current || showTooltip) {
+      e.preventDefault();
+      e.stopPropagation();
+      // Reset the flag after a short delay to allow tooltip to be dismissed
+      setTimeout(() => {
+        tooltipShownRef.current = false;
+      }, 100);
+      return;
+    }
+    onClick();
+  };
+
+  const handleTouchEnd = () => {
+    handleMouseUp();
+    // On touch devices, if tooltip was shown, prevent the click
+    if (tooltipShownRef.current || showTooltip) {
+      // Reset after a short delay
+      setTimeout(() => {
+        tooltipShownRef.current = false;
+        setShowTooltip(false);
+      }, 100);
+    }
   };
 
   const getBonusStyles = () => {
@@ -77,12 +107,12 @@ export const Tile = memo(function Tile({ tile, isSelected, onClick, isNew = fals
   return (
     <div className="relative">
       <button
-        onClick={onClick}
+        onClick={handleClick}
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseLeave}
         onTouchStart={handleMouseDown}
-        onTouchEnd={handleMouseUp}
+        onTouchEnd={handleTouchEnd}
         className={`
           w-full aspect-square rounded-full
           flex items-center justify-center

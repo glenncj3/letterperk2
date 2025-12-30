@@ -10,8 +10,12 @@ export function GameHeader({ onHelpClick }: GameHeaderProps) {
   const { state, actions } = useGameState();
   const [showDailyTooltip, setShowDailyTooltip] = useState(false);
   const [showCasualTooltip, setShowCasualTooltip] = useState(false);
+  const [showPointsTooltip, setShowPointsTooltip] = useState(false);
+  const [showWordsTooltip, setShowWordsTooltip] = useState(false);
   const dailyTimeoutRef = useRef<number | null>(null);
   const casualTimeoutRef = useRef<number | null>(null);
+  const pointsTimeoutRef = useRef<number | null>(null);
+  const wordsTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
     return () => {
@@ -20,6 +24,12 @@ export function GameHeader({ onHelpClick }: GameHeaderProps) {
       }
       if (casualTimeoutRef.current) {
         clearTimeout(casualTimeoutRef.current);
+      }
+      if (pointsTimeoutRef.current) {
+        clearTimeout(pointsTimeoutRef.current);
+      }
+      if (wordsTimeoutRef.current) {
+        clearTimeout(wordsTimeoutRef.current);
       }
     };
   }, []);
@@ -60,28 +70,98 @@ export function GameHeader({ onHelpClick }: GameHeaderProps) {
     setShowCasualTooltip(false);
   };
 
+  const handlePointsMouseDown = () => {
+    pointsTimeoutRef.current = window.setTimeout(() => {
+      setShowPointsTooltip(true);
+    }, 500);
+  };
+
+  const handlePointsMouseUp = () => {
+    if (pointsTimeoutRef.current) {
+      clearTimeout(pointsTimeoutRef.current);
+      pointsTimeoutRef.current = null;
+    }
+  };
+
+  const handlePointsMouseLeave = () => {
+    handlePointsMouseUp();
+    setShowPointsTooltip(false);
+  };
+
+  const handleWordsMouseDown = () => {
+    wordsTimeoutRef.current = window.setTimeout(() => {
+      setShowWordsTooltip(true);
+    }, 500);
+  };
+
+  const handleWordsMouseUp = () => {
+    if (wordsTimeoutRef.current) {
+      clearTimeout(wordsTimeoutRef.current);
+      wordsTimeoutRef.current = null;
+    }
+  };
+
+  const handleWordsMouseLeave = () => {
+    handleWordsMouseUp();
+    setShowWordsTooltip(false);
+  };
+
   return (
     <header className="w-full max-w-[25.2rem] mx-auto px-4 pt-2 pb-1 flex-shrink-0">
       <div className="flex items-center justify-between gap-2">
         <h1 className="text-2xl font-bold text-gray-900">LetterPerk</h1>
 
         <div className="flex items-center gap-1.5">
-          <div className="bg-gray-200 rounded-lg w-12 h-12 flex flex-col items-center justify-center">
-            <div className="text-xl font-bold text-gray-900 text-center leading-tight">
-              {state.totalScore}
+          <div className="relative">
+            <div
+              className="bg-gray-200 rounded-lg w-12 h-12 flex flex-col items-center justify-center cursor-help"
+              onMouseDown={handlePointsMouseDown}
+              onMouseUp={handlePointsMouseUp}
+              onMouseLeave={handlePointsMouseLeave}
+              onTouchStart={handlePointsMouseDown}
+              onTouchEnd={handlePointsMouseUp}
+            >
+              <div className="text-xl font-bold text-gray-900 text-center leading-tight">
+                {state.totalScore}
+              </div>
+              <div className="text-[9px] text-gray-600 text-center whitespace-nowrap leading-tight">
+                Points
+              </div>
             </div>
-            <div className="text-[9px] text-gray-600 text-center whitespace-nowrap leading-tight">
-              Points
-            </div>
+            {showPointsTooltip && (
+              <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 z-50 pointer-events-none">
+                <div className="bg-gray-900 text-white text-sm rounded-lg px-3 py-2 whitespace-nowrap shadow-xl">
+                  <div className="font-semibold">Total Score</div>
+                  <div className="text-xs text-gray-300">Points from all words this game</div>
+                </div>
+              </div>
+            )}
           </div>
 
-          <div className="bg-gray-200 rounded-lg w-12 h-12 flex flex-col items-center justify-center">
-            <div className="text-xl font-bold text-gray-900 text-center leading-tight">
-              {state.wordsRemaining}
+          <div className="relative">
+            <div
+              className="bg-gray-200 rounded-lg w-12 h-12 flex flex-col items-center justify-center cursor-help"
+              onMouseDown={handleWordsMouseDown}
+              onMouseUp={handleWordsMouseUp}
+              onMouseLeave={handleWordsMouseLeave}
+              onTouchStart={handleWordsMouseDown}
+              onTouchEnd={handleWordsMouseUp}
+            >
+              <div className="text-xl font-bold text-gray-900 text-center leading-tight">
+                {state.wordsRemaining}
+              </div>
+              <div className="text-[9px] text-gray-600 text-center whitespace-nowrap leading-tight">
+                Words
+              </div>
             </div>
-            <div className="text-[9px] text-gray-600 text-center whitespace-nowrap leading-tight">
-              Words
-            </div>
+            {showWordsTooltip && (
+              <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 z-50 pointer-events-none">
+                <div className="bg-gray-900 text-white text-sm rounded-lg px-3 py-2 whitespace-nowrap shadow-xl">
+                  <div className="font-semibold">Words Remaining</div>
+                  <div className="text-xs text-gray-300">Number of words left to submit</div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="relative">

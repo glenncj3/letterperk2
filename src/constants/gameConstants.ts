@@ -103,14 +103,14 @@ export const BONUS_COLORS = {
     bg: 'bg-yellow-400',
     border: 'border-yellow-400',
     text: 'text-yellow-600',
-    name: 'Top Pair',
-    description: '+1 per yellow (squared)'
+    name: 'Daisy Chain',
+    description: 'Square the quantity of yellow tiles used'
   },
   blue: {
     bg: 'bg-blue-500',
     border: 'border-blue-500',
     text: 'text-blue-600',
-    name: 'Starting Block',
+    name: 'On the Edge',
     description: '+4 points (first or last letter)'
   }
 };

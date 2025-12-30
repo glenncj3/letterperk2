@@ -6,6 +6,7 @@ import { useRef, useEffect, useState } from 'react';
 export function GameBoard() {
   const { state, actions } = useGameState();
   const previousTileIdsRef = useRef<Set<string> | null>(null);
+  const previousTilePositionsRef = useRef<Map<string, { row: number; col: number }>>(new Map());
   const previousPuzzleSeedRef = useRef<number | null>(null);
   const [newTileIds, setNewTileIds] = useState<Set<string>>(new Set());
   const tileDelaysRef = useRef<Map<string, number>>(new Map());
@@ -29,10 +30,12 @@ export function GameBoard() {
     // If this is a new game (puzzle seed changed), animate all tiles
     if (isNewGame && state.tiles.length > 0) {
       const allNewIds = new Set<string>();
+      const newPositions = new Map<string, { row: number; col: number }>();
       state.tiles.forEach(tile => {
         allNewIds.add(tile.id);
         const delay = (tile.col * 40) + (tile.row * 30) + (Math.random() * 200);
         tileDelaysRef.current.set(tile.id, delay);
+        newPositions.set(tile.id, { row: tile.row, col: tile.col });
       });
       
       setNewTileIds(allNewIds);
@@ -42,6 +45,7 @@ export function GameBoard() {
       }, 1000);
       
       previousTileIdsRef.current = currentTileIds;
+      previousTilePositionsRef.current = newPositions;
       previousPuzzleSeedRef.current = currentPuzzleSeed;
       
       return () => clearTimeout(timer);
@@ -50,10 +54,12 @@ export function GameBoard() {
     // Initialize on first render - animate all tiles on initial game load
     if (previousTileIdsRef.current === null && state.tiles.length > 0) {
       const allNewIds = new Set<string>();
+      const newPositions = new Map<string, { row: number; col: number }>();
       state.tiles.forEach(tile => {
         allNewIds.add(tile.id);
         const delay = (tile.col * 40) + (tile.row * 30) + (Math.random() * 200);
         tileDelaysRef.current.set(tile.id, delay);
+        newPositions.set(tile.id, { row: tile.row, col: tile.col });
       });
       
       setNewTileIds(allNewIds);
@@ -63,12 +69,14 @@ export function GameBoard() {
       }, 1000);
       
       previousTileIdsRef.current = currentTileIds;
+      previousTilePositionsRef.current = newPositions;
       previousPuzzleSeedRef.current = currentPuzzleSeed;
       
       return () => clearTimeout(timer);
     }
     
     const previousIds = previousTileIdsRef.current;
+    const previousPositions = previousTilePositionsRef.current;
     
     // Find tiles that are new (in current but not in previous)
     const newIds = new Set<string>();
@@ -84,22 +92,50 @@ export function GameBoard() {
       }
     });
 
-    if (newIds.size > 0) {
-      setNewTileIds(newIds);
-      // Clear the new tile flags and delays after animation completes
+    // Find tiles that have moved positions (same ID but different row/col)
+    const movedIds = new Set<string>();
+    state.tiles.forEach(tile => {
+      if (previousIds.has(tile.id)) {
+        const previousPos = previousPositions.get(tile.id);
+        if (previousPos && (previousPos.row !== tile.row || previousPos.col !== tile.col)) {
+          movedIds.add(tile.id);
+          // Generate delay based on how far they moved
+          const rowDiff = Math.abs(previousPos.row - tile.row);
+          const delay = (tile.col * 40) + (tile.row * 30) + (rowDiff * 50);
+          tileDelaysRef.current.set(tile.id, delay);
+        }
+      }
+    });
+
+    // Combine new and moved tiles for animation
+    const tilesToAnimate = new Set([...newIds, ...movedIds]);
+
+    if (tilesToAnimate.size > 0) {
+      setNewTileIds(tilesToAnimate);
+      // Clear the animation flags and delays after animation completes
       const timer = setTimeout(() => {
         setNewTileIds(new Set());
-        newIds.forEach(id => tileDelaysRef.current.delete(id));
+        tilesToAnimate.forEach(id => tileDelaysRef.current.delete(id));
       }, 1000); // Slightly longer than animation duration
       
-      // Update previous tile IDs after detecting new ones
+      // Update previous tile IDs and positions after detecting changes
       previousTileIdsRef.current = currentTileIds;
+      const newPositions = new Map<string, { row: number; col: number }>();
+      state.tiles.forEach(tile => {
+        newPositions.set(tile.id, { row: tile.row, col: tile.col });
+      });
+      previousTilePositionsRef.current = newPositions;
       
       return () => clearTimeout(timer);
     }
 
-    // Update previous tile IDs even if no new tiles
+    // Update previous tile IDs and positions even if no animations
     previousTileIdsRef.current = currentTileIds;
+    const newPositions = new Map<string, { row: number; col: number }>();
+    state.tiles.forEach(tile => {
+      newPositions.set(tile.id, { row: tile.row, col: tile.col });
+    });
+    previousTilePositionsRef.current = newPositions;
     if (currentPuzzleSeed !== null) {
       previousPuzzleSeedRef.current = currentPuzzleSeed;
     }
