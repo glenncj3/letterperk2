@@ -18,7 +18,7 @@ export const DEFAULT_BONUS_CONFIG: BonusConfig[] = [
   { type: 'red', minCount: 1, maxCount: 1 },
   { type: 'yellow', minCount: 9, maxCount: 9 },
   { type: 'blue', minCount: 5, maxCount: 5 },
-  { type: 'black', minCount: 3, maxCount: 3 },
+  { type: 'black', minCount: 2, maxCount: 2 },
 ];
 
 export const EFFECT_ENABLED = false;

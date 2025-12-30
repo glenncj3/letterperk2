@@ -34,6 +34,7 @@ const initialState: GameState = {
   error: null,
   isLoading: true,
   gameStartedAt: undefined,
+  tooltip: null,
 };
 
 type GameAction =
@@ -50,6 +51,7 @@ type GameAction =
   | { type: 'REFRESH_TILES'; newTiles: Tile[] }
   | { type: 'SET_ERROR'; error: string | null }
   | { type: 'SET_LOADING'; isLoading: boolean }
+  | { type: 'SET_TOOLTIP'; tooltip: { title: string; description: string } | null }
   | { type: 'RESET_GAME' };
 
 function gameReducer(state: GameState, action: GameAction): GameState {
@@ -155,6 +157,9 @@ function gameReducer(state: GameState, action: GameAction): GameState {
 
     case 'SET_LOADING':
       return { ...state, isLoading: action.isLoading };
+
+    case 'SET_TOOLTIP':
+      return { ...state, tooltip: action.tooltip };
 
     case 'RESET_GAME':
       return { ...initialState, gameMode: state.gameMode };
@@ -449,6 +454,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'SET_ERROR', error: null });
   }, []);
 
+  const setTooltip = useCallback((tooltip: { title: string; description: string } | null) => {
+    dispatch({ type: 'SET_TOOLTIP', tooltip });
+  }, []);
+
   const actions: GameActions = {
     setGameMode,
     selectTile,
@@ -460,6 +469,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     resetGame,
     setError,
     clearError,
+    setTooltip,
   };
 
   return (

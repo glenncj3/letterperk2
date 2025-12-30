@@ -8,15 +8,13 @@ interface GameHeaderProps {
 
 export function GameHeader({ onHelpClick }: GameHeaderProps) {
   const { state, actions } = useGameState();
-  const [showDailyTooltip, setShowDailyTooltip] = useState(false);
-  const [showCasualTooltip, setShowCasualTooltip] = useState(false);
-  const [showPointsTooltip, setShowPointsTooltip] = useState(false);
-  const [showWordsTooltip, setShowWordsTooltip] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
   const dailyTimeoutRef = useRef<number | null>(null);
   const casualTimeoutRef = useRef<number | null>(null);
   const pointsTimeoutRef = useRef<number | null>(null);
   const wordsTimeoutRef = useRef<number | null>(null);
+  const dailyTooltipShownRef = useRef(false);
+  const casualTooltipShownRef = useRef(false);
 
   useEffect(() => {
     return () => {
@@ -61,8 +59,10 @@ export function GameHeader({ onHelpClick }: GameHeaderProps) {
   }, [hasInteracted, state.gameStatus]);
 
   const handleDailyMouseDown = () => {
+    dailyTooltipShownRef.current = false;
     dailyTimeoutRef.current = window.setTimeout(() => {
-      setShowDailyTooltip(true);
+      actions.setTooltip({ title: 'Daily Mode', description: 'Play the same puzzle as everyone else today' });
+      dailyTooltipShownRef.current = true;
     }, 500);
   };
 
@@ -75,12 +75,38 @@ export function GameHeader({ onHelpClick }: GameHeaderProps) {
 
   const handleDailyMouseLeave = () => {
     handleDailyMouseUp();
-    setShowDailyTooltip(false);
+    actions.setTooltip(null);
+    dailyTooltipShownRef.current = false;
+  };
+
+  const handleDailyClick = (e: React.MouseEvent) => {
+    if (dailyTooltipShownRef.current || state.tooltip) {
+      e.preventDefault();
+      e.stopPropagation();
+      setTimeout(() => {
+        dailyTooltipShownRef.current = false;
+        actions.setTooltip(null);
+      }, 100);
+      return;
+    }
+    actions.setGameMode('daily');
+  };
+
+  const handleDailyTouchEnd = () => {
+    handleDailyMouseUp();
+    if (dailyTooltipShownRef.current || state.tooltip) {
+      setTimeout(() => {
+        dailyTooltipShownRef.current = false;
+        actions.setTooltip(null);
+      }, 100);
+    }
   };
 
   const handleCasualMouseDown = () => {
+    casualTooltipShownRef.current = false;
     casualTimeoutRef.current = window.setTimeout(() => {
-      setShowCasualTooltip(true);
+      actions.setTooltip({ title: 'Casual Mode', description: 'Play unlimited random puzzles' });
+      casualTooltipShownRef.current = true;
     }, 500);
   };
 
@@ -93,12 +119,36 @@ export function GameHeader({ onHelpClick }: GameHeaderProps) {
 
   const handleCasualMouseLeave = () => {
     handleCasualMouseUp();
-    setShowCasualTooltip(false);
+    actions.setTooltip(null);
+    casualTooltipShownRef.current = false;
+  };
+
+  const handleCasualClick = (e: React.MouseEvent) => {
+    if (casualTooltipShownRef.current || state.tooltip) {
+      e.preventDefault();
+      e.stopPropagation();
+      setTimeout(() => {
+        casualTooltipShownRef.current = false;
+        actions.setTooltip(null);
+      }, 100);
+      return;
+    }
+    actions.setGameMode('casual');
+  };
+
+  const handleCasualTouchEnd = () => {
+    handleCasualMouseUp();
+    if (casualTooltipShownRef.current || state.tooltip) {
+      setTimeout(() => {
+        casualTooltipShownRef.current = false;
+        actions.setTooltip(null);
+      }, 100);
+    }
   };
 
   const handlePointsMouseDown = () => {
     pointsTimeoutRef.current = window.setTimeout(() => {
-      setShowPointsTooltip(true);
+      actions.setTooltip({ title: 'Total Score', description: 'Points from all words this game' });
     }, 500);
   };
 
@@ -111,12 +161,12 @@ export function GameHeader({ onHelpClick }: GameHeaderProps) {
 
   const handlePointsMouseLeave = () => {
     handlePointsMouseUp();
-    setShowPointsTooltip(false);
+    actions.setTooltip(null);
   };
 
   const handleWordsMouseDown = () => {
     wordsTimeoutRef.current = window.setTimeout(() => {
-      setShowWordsTooltip(true);
+      actions.setTooltip({ title: 'Words Remaining', description: 'Number of words left to submit' });
     }, 500);
   };
 
@@ -129,7 +179,7 @@ export function GameHeader({ onHelpClick }: GameHeaderProps) {
 
   const handleWordsMouseLeave = () => {
     handleWordsMouseUp();
-    setShowWordsTooltip(false);
+    actions.setTooltip(null);
   };
 
   return (
@@ -154,14 +204,6 @@ export function GameHeader({ onHelpClick }: GameHeaderProps) {
                 Points
               </div>
             </div>
-            {showPointsTooltip && (
-              <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 z-50 pointer-events-none">
-                <div className="bg-gray-900 text-white text-sm rounded-lg px-3 py-2 whitespace-nowrap shadow-xl">
-                  <div className="font-semibold">Total Score</div>
-                  <div className="text-xs text-gray-300">Points from all words this game</div>
-                </div>
-              </div>
-            )}
           </div>
 
           <div className="relative">
@@ -180,25 +222,17 @@ export function GameHeader({ onHelpClick }: GameHeaderProps) {
                 Words
               </div>
             </div>
-            {showWordsTooltip && (
-              <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 z-50 pointer-events-none">
-                <div className="bg-gray-900 text-white text-sm rounded-lg px-3 py-2 whitespace-nowrap shadow-xl">
-                  <div className="font-semibold">Words Remaining</div>
-                  <div className="text-xs text-gray-300">Number of words left to submit</div>
-                </div>
-              </div>
-            )}
           </div>
 
           <div className="relative">
             <button
-              onClick={() => actions.setGameMode('daily')}
+              onClick={handleDailyClick}
               disabled={state.gameStatus === 'loading'}
               onMouseDown={handleDailyMouseDown}
               onMouseUp={handleDailyMouseUp}
               onMouseLeave={handleDailyMouseLeave}
               onTouchStart={handleDailyMouseDown}
-              onTouchEnd={handleDailyMouseUp}
+              onTouchEnd={handleDailyTouchEnd}
               className={`
                 w-10 h-12 rounded-lg font-semibold
                 transition-all duration-200 flex items-center justify-center
@@ -215,25 +249,17 @@ export function GameHeader({ onHelpClick }: GameHeaderProps) {
             >
               <Calendar className="w-6 h-6" />
             </button>
-            {showDailyTooltip && (
-              <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 z-50 pointer-events-none">
-                <div className="bg-gray-900 text-white text-sm rounded-lg px-3 py-2 whitespace-nowrap shadow-xl">
-                  <div className="font-semibold">Daily Mode</div>
-                  <div className="text-xs text-gray-300">Play the same puzzle as everyone else today</div>
-                </div>
-              </div>
-            )}
           </div>
 
           <div className="relative">
             <button
-              onClick={() => actions.setGameMode('casual')}
+              onClick={handleCasualClick}
               disabled={state.gameStatus === 'loading'}
               onMouseDown={handleCasualMouseDown}
               onMouseUp={handleCasualMouseUp}
               onMouseLeave={handleCasualMouseLeave}
               onTouchStart={handleCasualMouseDown}
-              onTouchEnd={handleCasualMouseUp}
+              onTouchEnd={handleCasualTouchEnd}
               className={`
                 w-10 h-12 rounded-lg font-semibold
                 transition-all duration-200 flex items-center justify-center
@@ -250,14 +276,6 @@ export function GameHeader({ onHelpClick }: GameHeaderProps) {
             >
               <Shuffle className="w-6 h-6" />
             </button>
-            {showCasualTooltip && (
-              <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 z-50 pointer-events-none">
-                <div className="bg-gray-900 text-white text-sm rounded-lg px-3 py-2 whitespace-nowrap shadow-xl">
-                  <div className="font-semibold">Casual Mode</div>
-                  <div className="text-xs text-gray-300">Play unlimited random puzzles</div>
-                </div>
-              </div>
-            )}
           </div>
 
           <button

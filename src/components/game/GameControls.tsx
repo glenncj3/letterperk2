@@ -1,10 +1,9 @@
 import { Send, RefreshCw } from 'lucide-react';
 import { useGameState } from '../../contexts/GameContext';
-import { useState, useRef, useEffect } from 'react';
+import { useRef, useEffect } from 'react';
 
 export function GameControls() {
   const { state, actions } = useGameState();
-  const [showRedrawTooltip, setShowRedrawTooltip] = useState(false);
   const redrawTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -18,7 +17,7 @@ export function GameControls() {
   const handleRedrawMouseDown = () => {
     if (state.tradesAvailable > 0 && state.gameStatus === 'playing') {
       redrawTimeoutRef.current = window.setTimeout(() => {
-        setShowRedrawTooltip(true);
+        actions.setTooltip({ title: 'Trade', description: 'Replace selected tiles with new ones' });
       }, 500);
     }
   };
@@ -32,26 +31,26 @@ export function GameControls() {
 
   const handleRedrawMouseLeave = () => {
     handleRedrawMouseUp();
-    setShowRedrawTooltip(false);
+    actions.setTooltip(null);
   };
 
   const handleRedrawTouchEnd = () => {
     handleRedrawMouseUp();
     // On touch devices, if tooltip was shown, prevent the click
-    if (showRedrawTooltip) {
+    if (state.tooltip) {
       setTimeout(() => {
-        setShowRedrawTooltip(false);
+        actions.setTooltip(null);
       }, 100);
     }
   };
 
   const handleRedrawClick = (e: React.MouseEvent) => {
     // Prevent action if tooltip was shown
-    if (showRedrawTooltip) {
+    if (state.tooltip) {
       e.preventDefault();
       e.stopPropagation();
       setTimeout(() => {
-        setShowRedrawTooltip(false);
+        actions.setTooltip(null);
       }, 100);
       return;
     }
@@ -90,14 +89,6 @@ export function GameControls() {
             <RefreshCw className="w-4 h-4 drop-shadow-md" />
             <span className="drop-shadow-md">Trade ({state.tradesAvailable})</span>
           </button>
-          {showRedrawTooltip && (
-            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 z-50 pointer-events-none">
-              <div className="bg-gray-900 text-white text-sm rounded-lg px-3 py-2 whitespace-nowrap shadow-xl">
-                <div className="font-semibold">Trade</div>
-                <div className="text-xs text-gray-300">Replace selected tiles with new ones</div>
-              </div>
-            </div>
-          )}
         </div>
 
         <button

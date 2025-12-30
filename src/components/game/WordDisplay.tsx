@@ -9,7 +9,15 @@ export function WordDisplay() {
 
   return (
     <div className="w-full max-w-[25.2rem] mx-auto px-4 mb-3 flex-shrink-0">
-      <div className="text-center min-h-[88px] flex flex-col justify-center">
+      <div className="text-center min-h-[88px] flex flex-col justify-center relative">
+        {state.tooltip && (
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-none w-full max-w-[20rem] px-4">
+            <div className="bg-gray-900 text-white text-sm rounded-lg px-4 py-3 shadow-xl">
+              <div className="font-semibold whitespace-normal">{state.tooltip.title}</div>
+              <div className="text-xs text-gray-300 mt-1 whitespace-normal">{state.tooltip.description}</div>
+            </div>
+          </div>
+        )}
         {!hasSelectedTiles ? (
           <div className="text-gray-400 italic text-xs">
             Tap and hold to read your perks. Tap any letters to spell words.

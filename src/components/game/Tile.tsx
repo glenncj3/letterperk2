@@ -1,6 +1,7 @@
 import { memo, useState, useRef, useEffect } from 'react';
 import { Tile as TileType } from '../../types/game';
 import { BONUS_COLORS } from '../../constants/gameConstants';
+import { useGameState } from '../../contexts/GameContext';
 
 interface TileProps {
   tile: TileType;
@@ -11,7 +12,7 @@ interface TileProps {
 }
 
 export const Tile = memo(function Tile({ tile, isSelected, onClick, isNew = false, animationDelay = 0 }: TileProps) {
-  const [showTooltip, setShowTooltip] = useState(false);
+  const { actions } = useGameState();
   const [isAnimating, setIsAnimating] = useState(isNew);
   const timeoutRef = useRef<number | null>(null);
   const tooltipShownRef = useRef(false);
@@ -42,7 +43,8 @@ export const Tile = memo(function Tile({ tile, isSelected, onClick, isNew = fals
     tooltipShownRef.current = false;
     if (tile.bonusType) {
       timeoutRef.current = window.setTimeout(() => {
-        setShowTooltip(true);
+        const colors = BONUS_COLORS[tile.bonusType!];
+        actions.setTooltip({ title: colors.name, description: colors.description });
         tooltipShownRef.current = true;
       }, 500);
     }
@@ -57,18 +59,19 @@ export const Tile = memo(function Tile({ tile, isSelected, onClick, isNew = fals
 
   const handleMouseLeave = () => {
     handleMouseUp();
-    setShowTooltip(false);
+    actions.setTooltip(null);
     tooltipShownRef.current = false;
   };
 
   const handleClick = (e: React.MouseEvent) => {
     // Prevent selection if tooltip was shown during this interaction
-    if (tooltipShownRef.current || showTooltip) {
+    if (tooltipShownRef.current) {
       e.preventDefault();
       e.stopPropagation();
       // Reset the flag after a short delay to allow tooltip to be dismissed
       setTimeout(() => {
         tooltipShownRef.current = false;
+        actions.setTooltip(null);
       }, 100);
       return;
     }
@@ -78,11 +81,11 @@ export const Tile = memo(function Tile({ tile, isSelected, onClick, isNew = fals
   const handleTouchEnd = () => {
     handleMouseUp();
     // On touch devices, if tooltip was shown, prevent the click
-    if (tooltipShownRef.current || showTooltip) {
+    if (tooltipShownRef.current) {
       // Reset after a short delay
       setTimeout(() => {
         tooltipShownRef.current = false;
-        setShowTooltip(false);
+        actions.setTooltip(null);
       }, 100);
     }
   };
@@ -123,7 +126,7 @@ export const Tile = memo(function Tile({ tile, isSelected, onClick, isNew = fals
           shadow-lg pb-0.5
           ${isAnimating ? 'animate-tile-fall' : ''}
         `}
-        style={{ 
+        style={{
           fontSize: 'clamp(1rem, 4vw, 2rem)',
           animationDelay: isAnimating ? `${animationDelay}ms` : undefined,
           zIndex: isAnimating ? 10 : 1
@@ -136,14 +139,6 @@ export const Tile = memo(function Tile({ tile, isSelected, onClick, isNew = fals
         </span>
       </button>
 
-      {showTooltip && tile.bonusType && (
-        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 z-50 pointer-events-none">
-          <div className="bg-gray-900 text-white text-sm rounded-lg px-3 py-2 whitespace-nowrap shadow-xl">
-            <div className="font-semibold">{BONUS_COLORS[tile.bonusType].name}</div>
-            <div className="text-xs text-gray-300">{BONUS_COLORS[tile.bonusType].description}</div>
-          </div>
-        </div>
-      )}
     </div>
   );
 });

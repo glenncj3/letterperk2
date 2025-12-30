@@ -96,6 +96,7 @@ export interface GameState {
   error: string | null;
   isLoading: boolean;
   gameStartedAt?: string; // ISO timestamp when game started
+  tooltip: { title: string; description: string } | null;
 }
 
 export interface GameActions {
@@ -109,4 +110,5 @@ export interface GameActions {
   resetGame: () => void;
   setError: (error: string | null) => void;
   clearError: () => void;
+  setTooltip: (tooltip: { title: string; description: string } | null) => void;
 }
