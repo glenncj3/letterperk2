@@ -13,11 +13,11 @@ export const PURPLE_BONUS_MIN_LENGTH = 7;
 export const RED_BONUS_MAX_LENGTH = 4;
 
 export const DEFAULT_BONUS_CONFIG: BonusConfig[] = [
-  { type: 'green', minCount: 5, maxCount: 5 },
+  { type: 'green', minCount: 4, maxCount: 4 },
   { type: 'purple', minCount: 1, maxCount: 1 },
-  { type: 'red', minCount: 5, maxCount: 5 },
-  { type: 'yellow', minCount: 6, maxCount: 6 },
-  { type: 'blue', minCount: 5, maxCount: 5 },
+  { type: 'red', minCount: 4, maxCount: 4 },
+  { type: 'yellow', minCount: 8, maxCount: 8 },
+  { type: 'blue', minCount: 6, maxCount: 6 },
 ];
 
 export const EFFECT_ENABLED = false;

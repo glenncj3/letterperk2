@@ -72,6 +72,18 @@ export async function logGameResult(
     return;
   }
 
+  console.log('Logging game result:', {
+    puzzleDate,
+    seed,
+    totalScore,
+    wordCount,
+    mode,
+    wordsCount: words.length,
+    durationSeconds,
+    startedAt,
+    totalBonusTilesUsed
+  });
+
   try {
     const { data: result, error: resultError } = await supabase
       .from('game_results')
@@ -90,8 +102,11 @@ export async function logGameResult(
 
     if (resultError) {
       console.error('Error logging game result:', resultError);
+      console.error('Error details:', JSON.stringify(resultError, null, 2));
       return;
     }
+
+    console.log('Game result logged successfully:', result.id);
 
     if (result && words.length > 0) {
       const wordRecords = words.map(w => ({
@@ -100,9 +115,11 @@ export async function logGameResult(
         submission_index: w.index,
         word: w.word,
         score: w.score,
-        bonuses: w.bonuses,
-        bonus_tiles_count: w.bonusTilesCount
+        bonuses: w.bonuses || [],
+        bonus_tiles_count: w.bonusTilesCount || 0
       }));
+
+      console.log('Logging word records:', wordRecords.length);
 
       const { error: wordsError } = await supabase
         .from('game_result_words')
@@ -110,10 +127,16 @@ export async function logGameResult(
 
       if (wordsError) {
         console.error('Error logging game words:', wordsError);
+        console.error('Words error details:', JSON.stringify(wordsError, null, 2));
+      } else {
+        console.log('Word records logged successfully');
       }
+    } else {
+      console.warn('No words to log or result is null', { result: !!result, wordsLength: words.length });
     }
   } catch (error) {
     console.error('Error in logGameResult:', error);
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
   }
 }
 

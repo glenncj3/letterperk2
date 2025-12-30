@@ -179,6 +179,14 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (state.gameStatus === 'gameover' && state.puzzle) {
+      console.log('Game over detected, preparing to log result...', {
+        wordsCompleted: state.wordsCompleted.length,
+        totalScore: state.totalScore,
+        gameMode: state.gameMode,
+        puzzleDate: state.puzzle.date,
+        seed: state.puzzle.seed
+      });
+
       // Calculate duration if we have a start time
       const durationSeconds = state.gameStartedAt 
         ? Math.floor((Date.now() - new Date(state.gameStartedAt).getTime()) / 1000)
@@ -193,8 +201,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
         // Count bonus tiles in this word
         const bonusTilesCount = w.tileBonuses.filter(b => b !== null).length;
         
-        // Use the bonus breakdown with actual values
-        const bonuses = w.bonusBreakdown.map(b => ({
+        // Use the bonus breakdown with actual values (handle missing breakdown)
+        const bonuses = (w.bonusBreakdown || []).map(b => ({
           type: b.type,
           value: b.value
         }));
@@ -208,6 +216,17 @@ export function GameProvider({ children }: { children: ReactNode }) {
         };
       });
 
+      console.log('Calling logGameResult with:', {
+        puzzleDate: state.puzzle.date,
+        seed: state.puzzle.seed,
+        totalScore: state.totalScore,
+        wordCount: state.wordsCompleted.length,
+        mode: state.gameMode,
+        wordsCount: words.length,
+        durationSeconds,
+        totalBonusTilesUsed
+      });
+
       logGameResult(
         state.puzzle.date,
         state.puzzle.seed,
@@ -218,7 +237,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
         durationSeconds,
         state.gameStartedAt,
         totalBonusTilesUsed
-      );
+      ).catch(error => {
+        console.error('Failed to log game result:', error);
+      });
     }
   }, [state.gameStatus, state.puzzle, state.totalScore, state.wordsCompleted, state.gameMode, state.gameStartedAt]);
 
