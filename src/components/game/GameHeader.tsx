@@ -12,6 +12,7 @@ export function GameHeader({ onHelpClick }: GameHeaderProps) {
   const [showCasualTooltip, setShowCasualTooltip] = useState(false);
   const [showPointsTooltip, setShowPointsTooltip] = useState(false);
   const [showWordsTooltip, setShowWordsTooltip] = useState(false);
+  const [hasInteracted, setHasInteracted] = useState(false);
   const dailyTimeoutRef = useRef<number | null>(null);
   const casualTimeoutRef = useRef<number | null>(null);
   const pointsTimeoutRef = useRef<number | null>(null);
@@ -33,6 +34,31 @@ export function GameHeader({ onHelpClick }: GameHeaderProps) {
       }
     };
   }, []);
+
+  // Reset glimmer when game status changes to 'playing' (new game started)
+  useEffect(() => {
+    if (state.gameStatus === 'playing') {
+      setHasInteracted(false);
+    }
+  }, [state.gameStatus]);
+
+  // Track first interaction (click or tap) to remove glimmer
+  useEffect(() => {
+    if (hasInteracted || state.gameStatus !== 'playing') return;
+
+    const handleFirstInteraction = () => {
+      setHasInteracted(true);
+    };
+
+    // Listen for clicks and touches
+    document.addEventListener('click', handleFirstInteraction, { once: true });
+    document.addEventListener('touchstart', handleFirstInteraction, { once: true });
+
+    return () => {
+      document.removeEventListener('click', handleFirstInteraction);
+      document.removeEventListener('touchstart', handleFirstInteraction);
+    };
+  }, [hasInteracted, state.gameStatus]);
 
   const handleDailyMouseDown = () => {
     dailyTimeoutRef.current = window.setTimeout(() => {
@@ -236,7 +262,7 @@ export function GameHeader({ onHelpClick }: GameHeaderProps) {
 
           <button
             onClick={onHelpClick}
-            className="bg-gray-200 rounded-lg w-10 h-12 flex items-center justify-center hover:bg-gray-300 transition-all duration-200 active:scale-95"
+            className={`bg-gray-200 rounded-lg w-10 h-12 flex items-center justify-center hover:bg-gray-300 transition-all duration-200 active:scale-95 ${!hasInteracted && state.gameStatus === 'playing' ? 'animate-glimmer' : ''}`}
             aria-label="Help"
           >
             <HelpCircle className="w-6 h-6 text-gray-600" />

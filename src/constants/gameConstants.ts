@@ -15,7 +15,7 @@ export const RED_BONUS_MAX_LENGTH = 4;
 export const DEFAULT_BONUS_CONFIG: BonusConfig[] = [
   { type: 'green', minCount: 7, maxCount: 7 },
   { type: 'purple', minCount: 1, maxCount: 1 },
-  { type: 'red', minCount: 4, maxCount: 4 },
+  { type: 'red', minCount: 1, maxCount: 1 },
   { type: 'yellow', minCount: 9, maxCount: 9 },
   { type: 'blue', minCount: 5, maxCount: 5 },
 ];
