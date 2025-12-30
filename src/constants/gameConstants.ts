@@ -13,11 +13,11 @@ export const PURPLE_BONUS_MIN_LENGTH = 7;
 export const RED_BONUS_MAX_LENGTH = 4;
 
 export const DEFAULT_BONUS_CONFIG: BonusConfig[] = [
-  { type: 'green', minCount: 4, maxCount: 4 },
+  { type: 'green', minCount: 7, maxCount: 7 },
   { type: 'purple', minCount: 1, maxCount: 1 },
   { type: 'red', minCount: 4, maxCount: 4 },
-  { type: 'yellow', minCount: 8, maxCount: 8 },
-  { type: 'blue', minCount: 6, maxCount: 6 },
+  { type: 'yellow', minCount: 9, maxCount: 9 },
+  { type: 'blue', minCount: 5, maxCount: 5 },
 ];
 
 export const EFFECT_ENABLED = false;
@@ -83,7 +83,7 @@ export const BONUS_COLORS = {
     border: 'border-green-500',
     text: 'text-green-600',
     name: 'Extra, Extra',
-    description: '+2 points'
+    description: '+1 point'
   },
   purple: {
     bg: 'bg-purple-500',
@@ -97,20 +97,20 @@ export const BONUS_COLORS = {
     border: 'border-red-500',
     text: 'text-red-600',
     name: 'Small Words',
-    description: '+8 points (≤4 letters)'
+    description: '+10 points (≤4 letters)'
   },
   yellow: {
     bg: 'bg-yellow-400',
     border: 'border-yellow-400',
     text: 'text-yellow-600',
     name: 'Daisy Chain',
-    description: 'Square the quantity of yellow tiles used'
+    description: 'Square the quantity of yellows used'
   },
   blue: {
     bg: 'bg-blue-500',
     border: 'border-blue-500',
     text: 'text-blue-600',
     name: 'On the Edge',
-    description: '+4 points (first or last letter)'
+    description: '+5 points (first or last letter)'
   }
 };

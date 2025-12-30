@@ -16,7 +16,7 @@ export function calculateScore(
 
     switch (tile.bonusType) {
       case 'green':
-        bonuses.push({ type: 'green', value: 2 });
+        bonuses.push({ type: 'green', value: 1 });
         break;
 
       case 'purple':
@@ -27,13 +27,13 @@ export function calculateScore(
 
       case 'red':
         if (word.length <= RED_BONUS_MAX_LENGTH) {
-          bonuses.push({ type: 'red', value: 8 });
+          bonuses.push({ type: 'red', value: 10 });
         }
         break;
 
       case 'blue':
         if (index === 0 || index === selectedTiles.length - 1) {
-          bonuses.push({ type: 'blue', value: 4 });
+          bonuses.push({ type: 'blue', value: 5 });
         }
         break;
     }
