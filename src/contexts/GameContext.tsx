@@ -11,6 +11,7 @@ import { RepositoryFactory } from '../repositories/repositoryFactory';
 import { GameInitializer } from '../services/GameInitializer';
 import { ErrorHandler, ErrorType, GameError } from '../utils/errors';
 import { getLogger } from '../services/Logger';
+import { trackEvent } from '../services/analytics';
 
 interface GameContextValue {
   state: GameState;
@@ -210,6 +211,17 @@ export function GameProvider({ children }: { children: ReactNode }) {
         puzzleDate: state.puzzle.date,
         seed: state.puzzle.seed
       });
+      
+      // Track game completion with GA4 recommended event
+      trackEvent('game_complete', {
+        game_mode: state.gameMode,
+        total_score: state.totalScore,
+        word_count: state.wordsCompleted.length,
+        puzzle_date: state.puzzle.date,
+        seed: state.puzzle.seed,
+        duration_seconds: durationSeconds,
+        total_bonus_tiles_used: totalBonusTilesUsed,
+      });
 
       // Calculate duration if we have a start time
       const durationSeconds = state.gameStartedAt 
@@ -291,9 +303,23 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
       dispatch({ type: 'SET_TILES', tiles: setup.tiles });
       dispatch({ type: 'SET_GAME_STATUS', status: 'playing' });
+      
+      // Track game start
+      trackEvent('game_start', {
+        game_mode: mode,
+        puzzle_date: setup.date,
+        seed: setup.seed,
+        is_replay: replay,
+      });
     } catch (error) {
       const gameError = ErrorHandler.handle(error, ErrorType.INITIALIZATION_FAILED);
       dispatch({ type: 'SET_ERROR', error: gameError.getUserMessage() });
+      
+      // Track initialization error
+      trackEvent('game_start_error', {
+        game_mode: mode,
+        error: gameError.getUserMessage(),
+      });
     } finally {
       dispatch({ type: 'SET_LOADING', isLoading: false });
     }
@@ -352,6 +378,18 @@ export function GameProvider({ children }: { children: ReactNode }) {
       newTiles: finalTiles,
       newIndices,
     });
+    
+    // Track word submission
+    trackEvent('word_submitted', {
+      word: state.currentWord,
+      word_length: state.currentWord.length,
+      score: state.currentWordScore.finalScore,
+      base_score: state.currentWordScore.baseScore,
+      bonus_count: state.currentWordScore.bonuses.length,
+      bonus_types: state.currentWordScore.bonuses.map(b => b.type),
+      game_mode: state.gameMode,
+      words_remaining: state.wordsRemaining - 1,
+    });
   }, [state]);
 
   const refreshTiles = useCallback(() => {
@@ -399,8 +437,15 @@ export function GameProvider({ children }: { children: ReactNode }) {
   }, [state.tradesAvailable, state.selectedTiles, state.tiles, state.columnDrawIndices, state.columnSequences, state.puzzle, state.randomFunc]);
 
   const setGameMode = useCallback(async (mode: GameMode) => {
+    if (state.gameMode !== mode) {
+      // Track mode change
+      trackEvent('game_mode_changed', {
+        from_mode: state.gameMode,
+        to_mode: mode,
+      });
+    }
     await initializeGame(mode);
-  }, [initializeGame]);
+  }, [initializeGame, state.gameMode]);
 
   const resetGame = useCallback(() => {
     dispatch({ type: 'RESET_GAME' });

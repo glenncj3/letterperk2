@@ -1,5 +1,7 @@
 import { X } from 'lucide-react';
 import { BONUS_COLORS } from '../../constants/gameConstants';
+import { trackEvent } from '../../services/analytics';
+import { useEffect } from 'react';
 
 interface HowToPlayModalProps {
   isOpen: boolean;
@@ -7,6 +9,12 @@ interface HowToPlayModalProps {
 }
 
 export function HowToPlayModal({ isOpen, onClose }: HowToPlayModalProps) {
+  useEffect(() => {
+    if (isOpen) {
+      trackEvent('view_help', {});
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (

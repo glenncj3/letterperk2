@@ -3,6 +3,7 @@ import { useGameState } from '../../contexts/GameContext';
 import { generateShareText, copyToClipboard } from '../../utils/shareUtils';
 import { LeaderboardModal } from './LeaderboardModal';
 import { useState } from 'react';
+import { trackEvent } from '../../services/analytics';
 
 interface GameOverModalProps {
   isOpen: boolean;
@@ -23,9 +24,23 @@ export function GameOverModal({ isOpen, onPlayAgain }: GameOverModalProps) {
       if (success) {
         setShareFeedback('Copied to clipboard!');
         setTimeout(() => setShareFeedback(''), 2000);
+        
+        // Track share event
+        trackEvent('share', {
+          method: 'clipboard',
+          game_mode: state.gameMode,
+          total_score: state.totalScore,
+          word_count: state.wordsCompleted.length,
+        });
       } else {
         setShareFeedback('Failed to copy');
         setTimeout(() => setShareFeedback(''), 2000);
+        
+        // Track share error
+        trackEvent('share_error', {
+          method: 'clipboard',
+          error: 'copy_failed',
+        });
       }
     }
   };
@@ -79,7 +94,13 @@ export function GameOverModal({ isOpen, onPlayAgain }: GameOverModalProps) {
           </button>
 
           <button
-            onClick={() => setShowLeaderboard(true)}
+            onClick={() => {
+              setShowLeaderboard(true);
+              trackEvent('view_leaderboard', {
+                game_mode: state.gameMode,
+                total_score: state.totalScore,
+              });
+            }}
             className="py-4 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl transition-colors flex items-center justify-center"
           >
             <Trophy className="w-6 h-6" />

@@ -87,9 +87,9 @@ export function LeaderboardModal({ isOpen, onClose }: LeaderboardModalProps) {
                     <X className="w-6 h-6" />
                 </button>
 
-                <div className="flex items-center gap-3 mb-6">
+                <div className="flex items-center justify-center gap-3 mb-6">
                     <Trophy className="w-8 h-8 text-yellow-500" />
-                    <h2 className="text-3xl font-bold text-gray-900">Today's Top 10</h2>
+                    <h2 className="text-3xl font-bold text-gray-900">Daily Top 10</h2>
                 </div>
 
                 {isLoading && (

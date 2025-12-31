@@ -1,3 +1,5 @@
+import { trackEvent } from './analytics';
+
 /**
  * Log levels for the logger.
  */
@@ -84,11 +86,15 @@ export class Logger {
 
   /**
    * Logs a game-specific event (for analytics/debugging).
+   * Also sends the event to Google Analytics if configured.
    */
   gameEvent(event: string, data?: Record<string, unknown>): void {
     if (this.minLevel <= LogLevel.DEBUG) {
       console.debug(`[GAME] ${event}`, data || {});
     }
+    
+    // Send to Google Analytics
+    trackEvent(event, data);
   }
 }
 

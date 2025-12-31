@@ -59,9 +59,16 @@ The game will work without it (permissive validation) but won't validate words p
 
 ## Environment Variables
 
-The Supabase credentials are already configured:
-- `VITE_SUPABASE_URL`
-- `VITE_SUPABASE_ANON_KEY`
+The following environment variables are used:
+
+### Required
+- `VITE_SUPABASE_URL` - Supabase project URL
+- `VITE_SUPABASE_ANON_KEY` - Supabase anonymous key
+
+### Optional
+- `VITE_GA_MEASUREMENT_ID` - Google Analytics 4 Measurement ID (e.g., `G-XXXXXXXXXX`)
+  - If not set, Google Analytics tracking will be disabled (useful for local development)
+  - Set this in production to enable web traffic analytics
 
 ## Architecture
 

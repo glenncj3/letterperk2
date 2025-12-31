@@ -1,6 +1,7 @@
 import { Send, RefreshCw } from 'lucide-react';
 import { useGameState } from '../../contexts/GameContext';
 import { useRef, useEffect } from 'react';
+import { trackEvent } from '../../services/analytics';
 
 export function GameControls() {
   const { state, actions } = useGameState();
@@ -60,6 +61,14 @@ export function GameControls() {
       e.stopPropagation();
       return;
     }
+    
+    // Track tile refresh
+    trackEvent('tile_refresh', {
+      game_mode: state.gameMode,
+      tiles_selected: state.selectedTiles.length,
+      trades_remaining: state.tradesAvailable - 1,
+    });
+    
     actions.refreshTiles();
   };
 
