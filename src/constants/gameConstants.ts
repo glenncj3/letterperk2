@@ -10,10 +10,14 @@ export const MIN_WORD_LENGTH = 2;
 export const TOTAL_TILES = 92;
 
 export const PURPLE_BONUS_MIN_LENGTH = 7;
+export const PURPLE_BONUS_MULTIPLIER = 2;
 export const RED_BONUS_MAX_LENGTH = 4;
+export const RED_BONUS_VALUE = 10;
+export const GREEN_BONUS_VALUE = 2;
+export const BLUE_BONUS_VALUE = 5;
 
 export const DEFAULT_BONUS_CONFIG: BonusConfig[] = [
-  { type: 'green', minCount: 7, maxCount: 7 },
+  { type: 'green', minCount: 4, maxCount: 4 },
   { type: 'purple', minCount: 1, maxCount: 1 },
   { type: 'red', minCount: 1, maxCount: 1 },
   { type: 'yellow', minCount: 9, maxCount: 9 },
@@ -84,7 +88,7 @@ export const BONUS_COLORS = {
     border: 'border-green-500',
     text: 'text-green-600',
     name: 'Extra, Extra',
-    description: 'Use to scores +1 point'
+    description: 'Use to scores +2 points'
   },
   purple: {
     bg: 'bg-purple-500',

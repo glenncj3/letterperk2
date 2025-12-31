@@ -1,13 +1,15 @@
 import { createContext, useContext, useReducer, ReactNode, useCallback, useEffect, useMemo } from 'react';
 import { GameState, GameActions, GameMode, Tile, CompletedWord } from '../types/game';
 import { MAX_WORDS_PER_GAME, GRID_COLS, TILES_PER_COLUMN } from '../constants/gameConstants';
-import { generateGameConfiguration, seededRandom, getTodayUTC, dateToSeed, formatUTCDateString } from '../utils/seedGenerator';
-import { calculateScore, assignBonusesToSequences } from '../utils/bonusUtils';
-import { applyGravity, createTile } from '../utils/tileUtils';
+import { calculateScore } from '../utils/bonusUtils';
+import { applyGravity } from '../utils/tileUtils';
 import { replaceTilesInColumns } from '../utils/tileReplacement';
 import { calculateWordState } from '../utils/wordCalculation';
 import { loadDictionary } from '../lib/dictionary';
-import { loadDailyPuzzle, logGameResult } from '../lib/puzzle';
+import { logGameResult } from '../lib/puzzle';
+import { RepositoryFactory } from '../repositories/repositoryFactory';
+import { GameInitializer } from '../services/GameInitializer';
+import { ErrorHandler, ErrorType, GameError } from '../utils/errors';
 
 interface GameContextValue {
   state: GameState;
@@ -269,61 +271,27 @@ export function GameProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'SET_GAME_MODE', mode });
 
     try {
-      let seed: number;
-      let date: string;
-
-      if (mode === 'daily') {
-        const today = getTodayUTC();
-        date = formatUTCDateString(today);
-        seed = dateToSeed(today);
-      } else {
-        const today = getTodayUTC();
-        date = formatUTCDateString(today);
-        seed = Math.floor(Math.random() * 900000) + 100000;
-      }
-
-      const configuration = mode === 'daily'
-        ? await loadDailyPuzzle(date, seed)
-        : generateGameConfiguration(seed);
-      const random = seededRandom(seed);
-
-      const sequencesWithBonuses = assignBonusesToSequences(
-        configuration.columnSequences,
-        configuration.bonusConfig,
-        random
-      );
-
-      const configWithBonuses = {
-        ...configuration,
-        columnSequences: sequencesWithBonuses
-      };
+      const puzzleRepo = RepositoryFactory.getPuzzleRepository();
+      const initializer = new GameInitializer(puzzleRepo);
+      const setup = await initializer.initialize(mode);
 
       dispatch({
         type: 'SET_PUZZLE',
-        puzzle: { date, seed, configuration: configWithBonuses },
+        puzzle: { date: setup.date, seed: setup.seed, configuration: setup.configuration },
       });
-
-      const initialTiles: Tile[] = [];
-      for (let col = 0; col < GRID_COLS; col++) {
-        for (let row = 0; row < TILES_PER_COLUMN; row++) {
-          const tileData = sequencesWithBonuses[col][row];
-          const tile = createTile(tileData.letter, tileData.points, row, col, tileData.bonusType);
-          initialTiles.push(tile);
-        }
-      }
 
       dispatch({
         type: 'SET_COLUMN_SEQUENCES',
-        sequences: sequencesWithBonuses,
-        indices: [TILES_PER_COLUMN, TILES_PER_COLUMN, TILES_PER_COLUMN],
-        randomFunc: random,
+        sequences: setup.columnSequences,
+        indices: setup.columnDrawIndices,
+        randomFunc: setup.randomFunc,
       });
 
-      dispatch({ type: 'SET_TILES', tiles: initialTiles });
+      dispatch({ type: 'SET_TILES', tiles: setup.tiles });
       dispatch({ type: 'SET_GAME_STATUS', status: 'playing' });
     } catch (error) {
-      dispatch({ type: 'SET_ERROR', error: 'Failed to initialize game' });
-      console.error(error);
+      const gameError = ErrorHandler.handle(error, ErrorType.INITIALIZATION_FAILED);
+      dispatch({ type: 'SET_ERROR', error: gameError.getUserMessage() });
     } finally {
       dispatch({ type: 'SET_LOADING', isLoading: false });
     }
@@ -343,12 +311,14 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   const submitWord = useCallback(async () => {
     if (!state.isWordValid || state.selectedTiles.length < 2) {
-      dispatch({ type: 'SET_ERROR', error: 'Invalid word' });
+      const error = new GameError(ErrorType.INVALID_WORD, 'Invalid word');
+      dispatch({ type: 'SET_ERROR', error: error.getUserMessage() });
       return;
     }
 
     if (!state.puzzle || !state.randomFunc) {
-      dispatch({ type: 'SET_ERROR', error: 'Game not initialized' });
+      const error = new GameError(ErrorType.GAME_NOT_INITIALIZED, 'Game not initialized');
+      dispatch({ type: 'SET_ERROR', error: error.getUserMessage() });
       return;
     }
 
