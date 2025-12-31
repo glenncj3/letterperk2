@@ -1,4 +1,4 @@
-import { X } from 'lucide-react';
+import { X, RefreshCw } from 'lucide-react';
 import { useGameState } from '../../contexts/GameContext';
 import { BONUS_COLORS } from '../../constants/gameConstants';
 
@@ -62,6 +62,12 @@ export function WordDisplay() {
                     );
                   })}
                 </>
+              )}
+              {/* Show black bonus indicator if any selected tiles have black bonus */}
+              {state.selectedTiles.some(tile => tile.bonusType === 'black') && (
+                <div className="w-7 h-7 rounded flex items-center justify-center bg-gray-500 border-0">
+                  <RefreshCw className="w-4 h-4 text-white" />
+                </div>
               )}
               <span className="text-base font-medium text-gray-700">
                 {state.currentWordScore.finalScore} Point{state.currentWordScore.finalScore !== 1 ? 's' : ''}
