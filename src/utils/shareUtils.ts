@@ -1,4 +1,5 @@
 import { GameState, BonusType } from '../types/game';
+import { getLogger } from '../services/Logger';
 
 // Emoji squares for different bonus types
 const BONUS_EMOJI_MAP: Record<BonusType, string> = {
@@ -79,7 +80,7 @@ export async function copyToClipboard(text: string): Promise<boolean> {
             return success;
         }
     } catch (error) {
-        console.error('Failed to copy to clipboard:', error);
+        getLogger().error('Failed to copy to clipboard', error);
         return false;
     }
 }

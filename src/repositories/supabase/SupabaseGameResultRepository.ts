@@ -1,5 +1,6 @@
 import { IGameResultRepository, GameResult, LeaderboardEntry } from '../interfaces/IGameResultRepository';
 import { getSupabase } from '../../lib/supabase';
+import { getLogger } from '../../services/Logger';
 
 /**
  * Supabase implementation of IGameResultRepository.
@@ -9,11 +10,12 @@ export class SupabaseGameResultRepository implements IGameResultRepository {
     const supabase = getSupabase();
 
     if (!supabase) {
-      console.warn('Cannot log game result: Supabase not configured');
+      getLogger().warn('Cannot log game result: Supabase not configured');
       return;
     }
 
-    console.log('Logging game result:', {
+    const logger = getLogger();
+    logger.gameEvent('logging_game_result', {
       puzzleDate: result.puzzleDate,
       seed: result.seed,
       totalScore: result.totalScore,
@@ -42,12 +44,11 @@ export class SupabaseGameResultRepository implements IGameResultRepository {
         .single();
 
       if (resultError) {
-        console.error('Error logging game result:', resultError);
-        console.error('Error details:', JSON.stringify(resultError, null, 2));
+        logger.error('Error logging game result', resultError, { errorDetails: JSON.stringify(resultError, null, 2) });
         return;
       }
 
-      console.log('Game result logged successfully:', gameResult.id);
+      logger.info('Game result logged successfully', { resultId: gameResult.id });
 
       if (gameResult && result.words.length > 0) {
         const wordRecords = result.words.map(w => ({
@@ -60,27 +61,25 @@ export class SupabaseGameResultRepository implements IGameResultRepository {
           bonus_tiles_count: w.bonusTilesCount || 0,
         }));
 
-        console.log('Logging word records:', wordRecords.length);
+        logger.debug('Logging word records', { count: wordRecords.length });
 
         const { error: wordsError } = await supabase
           .from('game_result_words')
           .insert(wordRecords);
 
         if (wordsError) {
-          console.error('Error logging game words:', wordsError);
-          console.error('Words error details:', JSON.stringify(wordsError, null, 2));
+          logger.error('Error logging game words', wordsError, { errorDetails: JSON.stringify(wordsError, null, 2) });
         } else {
-          console.log('Word records logged successfully');
+          logger.info('Word records logged successfully');
         }
       } else {
-        console.warn('No words to log or result is null', {
+        logger.warn('No words to log or result is null', {
           result: !!gameResult,
           wordsLength: result.words.length,
         });
       }
     } catch (error) {
-      console.error('Error in logGameResult:', error);
-      console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+      logger.error('Error in logGameResult', error);
     }
   }
 
@@ -104,7 +103,7 @@ export class SupabaseGameResultRepository implements IGameResultRepository {
         .limit(10);
 
       if (error) {
-        console.error('Error fetching leaderboard:', error);
+        getLogger().error('Error fetching leaderboard', error);
         return [];
       }
 
@@ -118,7 +117,7 @@ export class SupabaseGameResultRepository implements IGameResultRepository {
 
       return Array.from(uniqueScores.values()).slice(0, 10);
     } catch (error) {
-      console.error('Error in getLeaderboard:', error);
+      getLogger().error('Error in getLeaderboard', error);
       return [];
     }
   }

@@ -10,6 +10,7 @@ import { logGameResult } from '../lib/puzzle';
 import { RepositoryFactory } from '../repositories/repositoryFactory';
 import { GameInitializer } from '../services/GameInitializer';
 import { ErrorHandler, ErrorType, GameError } from '../utils/errors';
+import { getLogger } from '../services/Logger';
 
 interface GameContextValue {
   state: GameState;
@@ -201,7 +202,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (state.gameStatus === 'gameover' && state.puzzle) {
-      console.log('Game over detected, preparing to log result...', {
+      const logger = getLogger();
+      logger.gameEvent('game_over_detected', {
         wordsCompleted: state.wordsCompleted.length,
         totalScore: state.totalScore,
         gameMode: state.gameMode,
@@ -238,7 +240,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         };
       });
 
-      console.log('Calling logGameResult with:', {
+      logger.gameEvent('calling_log_game_result', {
         puzzleDate: state.puzzle.date,
         seed: state.puzzle.seed,
         totalScore: state.totalScore,
@@ -260,7 +262,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         state.gameStartedAt,
         totalBonusTilesUsed
       ).catch(error => {
-        console.error('Failed to log game result:', error);
+        getLogger().error('Failed to log game result', error);
       });
     }
   }, [state.gameStatus, state.puzzle, state.totalScore, state.wordsCompleted, state.gameMode, state.gameStartedAt]);
@@ -385,7 +387,15 @@ export function GameProvider({ children }: { children: ReactNode }) {
     const finalTiles = applyGravity(allTiles);
 
     dispatch({ type: 'REFRESH_TILES', newTiles: finalTiles });
-    dispatch({ type: 'SET_COLUMN_SEQUENCES', sequences: state.columnSequences, indices: newIndices, randomFunc: state.randomFunc! });
+    
+    // Type guard: randomFunc should exist at this point due to earlier check
+    if (!state.randomFunc) {
+      const error = new GameError(ErrorType.GAME_NOT_INITIALIZED, 'Game not initialized');
+      dispatch({ type: 'SET_ERROR', error: error.getUserMessage() });
+      return;
+    }
+    
+    dispatch({ type: 'SET_COLUMN_SEQUENCES', sequences: state.columnSequences, indices: newIndices, randomFunc: state.randomFunc });
   }, [state.tradesAvailable, state.selectedTiles, state.tiles, state.columnDrawIndices, state.columnSequences, state.puzzle, state.randomFunc]);
 
   const setGameMode = useCallback(async (mode: GameMode) => {

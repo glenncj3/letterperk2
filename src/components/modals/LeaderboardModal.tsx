@@ -2,16 +2,11 @@ import { Trophy, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { getLeaderboard } from '../../lib/puzzle';
 import { getTodayUTC, formatUTCDateString } from '../../utils/seedGenerator';
+import { LeaderboardEntry } from '../../repositories/interfaces/IGameResultRepository';
 
 interface LeaderboardModalProps {
     isOpen: boolean;
     onClose: () => void;
-}
-
-interface LeaderboardEntry {
-    total_score: number;
-    word_count: number;
-    created_at: string;
 }
 
 export function LeaderboardModal({ isOpen, onClose }: LeaderboardModalProps) {
@@ -36,7 +31,7 @@ export function LeaderboardModal({ isOpen, onClose }: LeaderboardModalProps) {
             const data = await getLeaderboard('daily', dateString);
             setLeaderboard(data);
         } catch (err) {
-            console.error('Error loading leaderboard:', err);
+            getLogger().error('Error loading leaderboard', err);
             setError('Failed to load leaderboard');
         } finally {
             setIsLoading(false);

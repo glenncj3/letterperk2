@@ -2,6 +2,7 @@ import { IPuzzleRepository } from '../interfaces/IPuzzleRepository';
 import { GameConfiguration } from '../../types/game';
 import { getSupabase } from '../../lib/supabase';
 import { generateGameConfiguration } from '../../utils/seedGenerator';
+import { getLogger } from '../../services/Logger';
 
 /**
  * Supabase implementation of IPuzzleRepository.
@@ -23,12 +24,17 @@ export class SupabasePuzzleRepository implements IPuzzleRepository {
         .maybeSingle();
 
       if (error) {
-        console.error('Error loading daily puzzle:', error);
+        getLogger().error('Error loading daily puzzle', error);
         return generateGameConfiguration(seed);
       }
 
-      if (data) {
-        return data.configuration as GameConfiguration;
+      if (data && data.configuration) {
+        // Type guard: ensure configuration exists and is valid
+        const config = data.configuration;
+        if (typeof config === 'object' && config !== null && 'columnSequences' in config) {
+          return config as GameConfiguration;
+        }
+        // If configuration is invalid, fall through to generate new one
       }
 
       // Puzzle not found, generate and save it
@@ -37,7 +43,7 @@ export class SupabasePuzzleRepository implements IPuzzleRepository {
 
       return configuration;
     } catch (error) {
-      console.error('Error in loadDailyPuzzle:', error);
+      getLogger().error('Error in loadDailyPuzzle', error);
       return generateGameConfiguration(seed);
     }
   }
@@ -50,7 +56,7 @@ export class SupabasePuzzleRepository implements IPuzzleRepository {
     const supabase = getSupabase();
 
     if (!supabase) {
-      console.warn('Cannot save puzzle: Supabase not configured');
+      getLogger().warn('Cannot save puzzle: Supabase not configured');
       return;
     }
 
@@ -70,10 +76,10 @@ export class SupabasePuzzleRepository implements IPuzzleRepository {
 
       if (error && error.code !== '23505') {
         // 23505 is unique constraint violation (expected if already exists)
-        console.error('Error saving daily puzzle:', error);
+        getLogger().error('Error saving daily puzzle', error);
       }
     } catch (error) {
-      console.error('Error in saveDailyPuzzle:', error);
+      getLogger().error('Error in saveDailyPuzzle', error);
     }
   }
 }

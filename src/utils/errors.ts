@@ -65,13 +65,15 @@ export class GameError extends Error {
   }
 }
 
+import { getLogger } from '../services/Logger';
+
 /**
  * Error handler utility functions.
  */
 export class ErrorHandler {
   /**
    * Handles an error and returns a GameError.
-   * Logs the error to console in development.
+   * Logs the error using the logger service.
    */
   static handle(error: unknown, defaultType: ErrorType = ErrorType.UNKNOWN_ERROR): GameError {
     if (error instanceof GameError) {
@@ -81,10 +83,9 @@ export class ErrorHandler {
     const message = error instanceof Error ? error.message : String(error);
     const gameError = new GameError(defaultType, message, error);
 
-    // Log in development
-    if (import.meta.env.DEV) {
-      console.error(`[GameError] ${gameError.type}:`, gameError.message, gameError.originalError);
-    }
+    // Log using logger service
+    const logger = getLogger();
+    logger.error(`[GameError] ${gameError.type}: ${gameError.message}`, gameError.originalError);
 
     return gameError;
   }

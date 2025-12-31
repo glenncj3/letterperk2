@@ -1,5 +1,7 @@
 import { RepositoryFactory } from '../repositories/repositoryFactory';
 
+import { GameConfiguration } from '../types/game';
+
 /**
  * Loads a daily puzzle configuration.
  * Uses the repository pattern for database access.
@@ -7,7 +9,7 @@ import { RepositoryFactory } from '../repositories/repositoryFactory';
  * @deprecated Use RepositoryFactory.getPuzzleRepository().loadDailyPuzzle() directly
  * This function is kept for backward compatibility.
  */
-export async function loadDailyPuzzle(date: string, seed: number) {
+export async function loadDailyPuzzle(date: string, seed: number): Promise<GameConfiguration> {
   const puzzleRepo = RepositoryFactory.getPuzzleRepository();
   return puzzleRepo.loadDailyPuzzle(date, seed);
 }

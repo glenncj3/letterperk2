@@ -5,7 +5,7 @@ export function getSupabase() {
   const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
   if (!url || !key) {
-    console.warn('Supabase credentials not found in environment variables');
+    getLogger().warn('Supabase credentials not found in environment variables');
     return null;
   }
 
