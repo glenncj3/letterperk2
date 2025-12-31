@@ -212,6 +212,16 @@ export function GameProvider({ children }: { children: ReactNode }) {
         seed: state.puzzle.seed
       });
       
+      // Calculate duration if we have a start time
+      const durationSeconds = state.gameStartedAt 
+        ? Math.floor((Date.now() - new Date(state.gameStartedAt).getTime()) / 1000)
+        : undefined;
+
+      // Count total bonus tiles used across all words
+      const totalBonusTilesUsed = state.wordsCompleted.reduce((total, word) => {
+        return total + word.tileBonuses.filter(b => b !== null).length;
+      }, 0);
+
       // Track game completion with GA4 recommended event
       trackEvent('game_complete', {
         game_mode: state.gameMode,
@@ -222,16 +232,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
         duration_seconds: durationSeconds,
         total_bonus_tiles_used: totalBonusTilesUsed,
       });
-
-      // Calculate duration if we have a start time
-      const durationSeconds = state.gameStartedAt 
-        ? Math.floor((Date.now() - new Date(state.gameStartedAt).getTime()) / 1000)
-        : undefined;
-
-      // Count total bonus tiles used across all words
-      const totalBonusTilesUsed = state.wordsCompleted.reduce((total, word) => {
-        return total + word.tileBonuses.filter(b => b !== null).length;
-      }, 0);
 
       const words = state.wordsCompleted.map((w, index) => {
         // Count bonus tiles in this word
