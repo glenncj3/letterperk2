@@ -112,17 +112,33 @@ export function generateGameConfiguration(seed: number): GameConfiguration {
   };
 }
 
+/**
+ * Converts a UTC Date to a seed number in MMDDYY format.
+ * Uses UTC date components to ensure consistency across timezones.
+ */
 export function dateToSeed(date: Date): number {
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const year = String(date.getFullYear()).slice(-2);
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  const year = String(date.getUTCFullYear()).slice(-2);
   return parseInt(month + day + year, 10);
 }
 
-export function getTodayPST(): Date {
-  const now = new Date();
-  const pstOffset = -8 * 60;
-  const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-  const pst = new Date(utc + (pstOffset * 60000));
-  return pst;
+/**
+ * Gets the current UTC date.
+ * This is simpler and more reliable than timezone-specific calculations.
+ */
+export function getTodayUTC(): Date {
+  return new Date();
+}
+
+/**
+ * Formats a UTC Date object as YYYY-MM-DD string.
+ * Uses UTC date components to ensure consistency across timezones.
+ * This is critical for keeping puzzle dates and leaderboard queries in sync.
+ */
+export function formatUTCDateString(date: Date): string {
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }

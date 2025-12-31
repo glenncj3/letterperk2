@@ -1,7 +1,7 @@
 import { Trophy, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { getLeaderboard } from '../../lib/puzzle';
-import { getTodayPST } from '../../utils/seedGenerator';
+import { getTodayUTC, formatUTCDateString } from '../../utils/seedGenerator';
 
 interface LeaderboardModalProps {
     isOpen: boolean;
@@ -30,8 +30,8 @@ export function LeaderboardModal({ isOpen, onClose }: LeaderboardModalProps) {
         setError(null);
 
         try {
-            const today = getTodayPST();
-            const dateString = today.toISOString().split('T')[0];
+            const today = getTodayUTC();
+            const dateString = formatUTCDateString(today);
 
             const data = await getLeaderboard('daily', dateString);
             setLeaderboard(data);

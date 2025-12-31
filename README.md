@@ -13,7 +13,7 @@ A word puzzle game where players spell words using letter tiles with bonus multi
 - Score calculation with bonus stacking
 
 ### Game Modes
-- **Daily Mode**: Deterministic puzzles based on date (shared by all players)
+- **Daily Mode**: Deterministic puzzles based on UTC date (shared by all players, resets at midnight UTC)
 - **Casual Mode**: Random unique puzzles (unlimited games)
 
 ### UI Components
@@ -88,11 +88,19 @@ src/
 
 ## Testing
 
+Run tests with:
+```bash
+npm test          # Watch mode
+npm run test:run  # Single run
+npm run test:ui   # UI mode
+```
+
 The game currently:
 - ✅ Builds successfully
 - ✅ Core logic implemented
 - ✅ UI matches design
 - ✅ Database integration complete
+- ✅ UTC date handling tested
 - ⏳ Needs dictionary for full validation
 
 ## Notes

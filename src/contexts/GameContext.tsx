@@ -1,7 +1,7 @@
 import { createContext, useContext, useReducer, ReactNode, useCallback, useEffect } from 'react';
 import { GameState, GameActions, GameMode, Tile, CompletedWord } from '../types/game';
 import { MAX_WORDS_PER_GAME, GRID_COLS, TILES_PER_COLUMN } from '../constants/gameConstants';
-import { generateGameConfiguration, seededRandom, getTodayPST, dateToSeed } from '../utils/seedGenerator';
+import { generateGameConfiguration, seededRandom, getTodayUTC, dateToSeed, formatUTCDateString } from '../utils/seedGenerator';
 import { calculateScore, assignBonusesToSequences } from '../utils/bonusUtils';
 import { applyGravity, createTile } from '../utils/tileUtils';
 import { isValidWord, loadDictionary } from '../lib/dictionary';
@@ -263,11 +263,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
       let date: string;
 
       if (mode === 'daily') {
-        const today = getTodayPST();
-        date = today.toISOString().split('T')[0];
+        const today = getTodayUTC();
+        date = formatUTCDateString(today);
         seed = dateToSeed(today);
       } else {
-        date = new Date().toISOString().split('T')[0];
+        const today = getTodayUTC();
+        date = formatUTCDateString(today);
         seed = Math.floor(Math.random() * 900000) + 100000;
       }
 
