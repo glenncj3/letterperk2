@@ -2,18 +2,20 @@
 
 ## Current Setup
 
-The Open Graph image is configured to use `/og-image.svg?v=1` (relative path with cache-busting).
+The Open Graph image is configured to use **absolute URLs** by default:
+- Default: `https://letterperk.com/og-image.svg?v={timestamp}`
+- Uses timestamp-based cache-busting to force refreshes
 
 ## For Production Deployment
 
-To use an absolute URL (recommended for better compatibility), set the `VITE_OG_BASE_URL` environment variable:
+The build automatically uses `https://letterperk.com` as the base URL. To override this, set the `VITE_OG_BASE_URL` environment variable:
 
 ```bash
 # Example for Netlify/Vercel
 VITE_OG_BASE_URL=https://letterperk.com
 ```
 
-This will automatically transform the image URLs to absolute paths during build.
+You can also set `VITE_OG_CACHE_BUSTER` to a specific value instead of using the build timestamp.
 
 ## Clearing Social Media Cache
 
@@ -36,8 +38,18 @@ Social media platforms cache Open Graph metadata aggressively. After deploying, 
 2. Enter your site URL
 3. Click "Inspect"
 
+### Discord (Most Difficult)
+Discord caches Open Graph images **very aggressively** and has no public debugger. Here's what to try:
+
+1. **Deploy with new cache-busting parameter**: The build uses a timestamp, so each new build should have a unique URL
+2. **Wait 24-48 hours**: Discord's cache can take a full day to clear
+3. **Try a different URL path**: If possible, temporarily rename the image file (e.g., `og-image-v2.svg`) and update the meta tags
+4. **Verify image accessibility**: Make sure `https://letterperk.com/og-image.svg` loads directly in a browser
+5. **Check meta tags**: View page source on your deployed site and verify the `og:image` meta tag has the absolute URL
+
+**Note**: Discord may show the old image for up to 48 hours even after everything is correct. This is normal Discord behavior.
+
 ### Other Platforms
-- **Discord**: Usually updates within a few hours, or you can change the URL slightly (add `?v=2`)
 - **Slack**: May take 24-48 hours, or try adding a query parameter
 
 ## Verifying the Image

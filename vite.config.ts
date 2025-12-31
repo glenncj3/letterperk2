@@ -8,8 +8,11 @@ export default defineConfig({
     {
       name: 'html-transform',
       transformIndexHtml(html) {
-        const baseUrl = process.env.VITE_OG_BASE_URL || '';
-        const imageUrl = baseUrl ? `${baseUrl}/og-image.svg?v=1` : '/og-image.svg?v=1';
+        // Use environment variable or default to letterperk.com for production
+        const baseUrl = process.env.VITE_OG_BASE_URL || 'https://letterperk.com';
+        // Use timestamp-based cache busting to force Discord to refresh
+        const cacheBuster = process.env.VITE_OG_CACHE_BUSTER || Date.now();
+        const imageUrl = `${baseUrl}/og-image.svg?v=${cacheBuster}`;
         return html.replace(/__OG_BASE_URL__/g, baseUrl).replace(/__OG_IMAGE_URL__/g, imageUrl);
       },
     },
