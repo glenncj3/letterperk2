@@ -94,13 +94,14 @@ export class SupabaseGameResultRepository implements IGameResultRepository {
     }
 
     try {
+      // Fetch more records to ensure we get 10 unique scores after deduplication
       const { data, error } = await supabase
         .from('game_results')
         .select('total_score, word_count, created_at')
         .eq('mode', mode)
         .eq('puzzle_date', date)
         .order('total_score', { ascending: false })
-        .limit(10);
+        .limit(50);
 
       if (error) {
         getLogger().error('Error fetching leaderboard', error);
@@ -115,6 +116,7 @@ export class SupabaseGameResultRepository implements IGameResultRepository {
         }
       });
 
+      // Return top 10 unique scores
       return Array.from(uniqueScores.values()).slice(0, 10);
     } catch (error) {
       getLogger().error('Error in getLeaderboard', error);
