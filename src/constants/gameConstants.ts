@@ -88,20 +88,20 @@ export const BONUS_COLORS = {
     border: 'border-green-500',
     text: 'text-green-600',
     name: 'Extra, Extra',
-    description: 'Use to scores +2 points'
+    description: 'Use to score +2 points'
   },
   purple: {
     bg: 'bg-purple-500',
     border: 'border-purple-500',
     text: 'text-purple-600',
-    name: 'Big Bingo',
+    name: 'Bingo!',
     description: 'Use to spell a word with 7 or more letters and double that word\'s score'
   },
   red: {
     bg: 'bg-red-500',
     border: 'border-red-500',
     text: 'text-red-600',
-    name: 'Small Words',
+    name: 'Keep It Simple',
     description: 'Use to spell a word with 4 or fewer letters for +10 points'
   },
   yellow: {
@@ -115,7 +115,7 @@ export const BONUS_COLORS = {
     bg: 'bg-blue-500',
     border: 'border-blue-500',
     text: 'text-blue-600',
-    name: 'On the Edge',
+    name: 'On Edge',
     description: 'Use as the first or last letter in a word for +5 points'
   },
   black: {

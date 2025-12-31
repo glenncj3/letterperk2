@@ -54,7 +54,7 @@ export function HowToPlayModal({ isOpen, onClose }: HowToPlayModalProps) {
             <div className="space-y-3">
               {Object.entries(BONUS_COLORS).map(([type, config]) => (
                 <div key={type} className="flex items-start gap-3">
-                  <div className={`w-12 h-12 rounded-full ${config.bg} flex-shrink-0 border-4 ${config.border}`} />
+                  <div className={`w-12 h-12 rounded-full ${type === 'black' ? 'bg-gray-500' : config.bg} flex-shrink-0 border-4 ${type === 'black' ? 'border-gray-500' : config.border}`} />
                   <div>
                     <div className="font-semibold text-gray-900">{config.name}</div>
                     <div className="text-sm text-gray-600">{config.description}</div>
