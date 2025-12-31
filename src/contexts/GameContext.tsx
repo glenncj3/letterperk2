@@ -1,10 +1,12 @@
-import { createContext, useContext, useReducer, ReactNode, useCallback, useEffect } from 'react';
+import { createContext, useContext, useReducer, ReactNode, useCallback, useEffect, useMemo } from 'react';
 import { GameState, GameActions, GameMode, Tile, CompletedWord } from '../types/game';
 import { MAX_WORDS_PER_GAME, GRID_COLS, TILES_PER_COLUMN } from '../constants/gameConstants';
 import { generateGameConfiguration, seededRandom, getTodayUTC, dateToSeed, formatUTCDateString } from '../utils/seedGenerator';
 import { calculateScore, assignBonusesToSequences } from '../utils/bonusUtils';
 import { applyGravity, createTile } from '../utils/tileUtils';
-import { isValidWord, loadDictionary } from '../lib/dictionary';
+import { replaceTilesInColumns } from '../utils/tileReplacement';
+import { calculateWordState } from '../utils/wordCalculation';
+import { loadDictionary } from '../lib/dictionary';
 import { loadDailyPuzzle, logGameResult } from '../lib/puzzle';
 
 interface GameContextValue {
@@ -178,14 +180,22 @@ export function GameProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'SET_LOADING', isLoading: false });
   }, []);
 
-  useEffect(() => {
-    if (state.selectedTiles.length > 0) {
-      const word = state.selectedTiles.map(t => t.letter).join('');
-      const isValid = isValidWord(word) && word.length >= 2;
-      const score = calculateScore(word, state.selectedTiles);
-      dispatch({ type: 'UPDATE_WORD_STATE', word, isValid, score });
-    }
+  // Memoize word state calculation to avoid unnecessary recalculations
+  const wordState = useMemo(() => {
+    return calculateWordState(state.selectedTiles);
   }, [state.selectedTiles]);
+
+  // Update word state when it changes
+  useEffect(() => {
+    if (wordState.word || state.selectedTiles.length === 0) {
+      dispatch({
+        type: 'UPDATE_WORD_STATE',
+        word: wordState.word,
+        isValid: wordState.isValid,
+        score: wordState.score,
+      });
+    }
+  }, [wordState]);
 
   useEffect(() => {
     if (state.gameStatus === 'gameover' && state.puzzle) {
@@ -354,31 +364,14 @@ export function GameProvider({ children }: { children: ReactNode }) {
       tile => !state.selectedTiles.some(st => st.id === tile.id)
     );
 
-    const freshTiles: Tile[] = [];
-    const newIndices: [number, number, number] = [...state.columnDrawIndices];
+    const { newTiles: allTiles, newIndices } = replaceTilesInColumns(
+      remainingTiles,
+      state.selectedTiles,
+      state.columnSequences,
+      state.columnDrawIndices
+    );
 
-    // Calculate correct row positions for new tiles
-    // After removing selected tiles, we need to place new tiles at the top of each column
-    for (let col = 0; col < GRID_COLS; col++) {
-      const columnTiles = remainingTiles.filter(t => t.col === col);
-      const tilesNeeded = TILES_PER_COLUMN - columnTiles.length;
-
-      // Place new tiles at negative row numbers so they sort last in descending sort
-      // This ensures they end up at the top after gravity is applied
-      // (gravity sorts descending, so lower numbers = sorted last = placed at top)
-      for (let i = 0; i < tilesNeeded; i++) {
-        const sequence = state.columnSequences[col];
-        const tileData = sequence[newIndices[col] % sequence.length];
-        newIndices[col]++;
-
-        // Use negative row numbers to ensure new tiles sort last and go to top
-        const newTile = createTile(tileData.letter, tileData.points, -1 - i, col, tileData.bonusType);
-        freshTiles.push(newTile);
-      }
-    }
-
-    // Combine all tiles and apply gravity once to position everything correctly
-    const allTiles = [...remainingTiles, ...freshTiles];
+    // Apply gravity to position everything correctly
     const finalTiles = applyGravity(allTiles);
 
     dispatch({
@@ -411,28 +404,14 @@ export function GameProvider({ children }: { children: ReactNode }) {
       tile => !state.selectedTiles.some(st => st.id === tile.id)
     );
 
-    const freshTiles: Tile[] = [];
-    const newIndices: [number, number, number] = [...state.columnDrawIndices];
+    const { newTiles: allTiles, newIndices } = replaceTilesInColumns(
+      remainingTiles,
+      state.selectedTiles,
+      state.columnSequences,
+      state.columnDrawIndices
+    );
 
-    // Calculate how many new tiles are needed per column
-    for (let col = 0; col < GRID_COLS; col++) {
-      const columnTiles = remainingTiles.filter(t => t.col === col);
-      const tilesNeeded = TILES_PER_COLUMN - columnTiles.length;
-
-      // Draw new tiles from the sequence to fill the column
-      for (let i = 0; i < tilesNeeded; i++) {
-        const sequence = state.columnSequences[col];
-        const tileData = sequence[newIndices[col] % sequence.length];
-        newIndices[col]++;
-
-        // Use negative row numbers so they sort last and go to top after gravity
-        const newTile = createTile(tileData.letter, tileData.points, -1 - i, col, tileData.bonusType);
-        freshTiles.push(newTile);
-      }
-    }
-
-    // Combine remaining tiles with new tiles and apply gravity
-    const allTiles = [...remainingTiles, ...freshTiles];
+    // Apply gravity to position everything correctly
     const finalTiles = applyGravity(allTiles);
 
     dispatch({ type: 'REFRESH_TILES', newTiles: finalTiles });

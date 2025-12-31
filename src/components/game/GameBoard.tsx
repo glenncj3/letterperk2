@@ -1,7 +1,13 @@
 import { useGameState } from '../../contexts/GameContext';
 import { Tile } from './Tile';
 import { GRID_ROWS, GRID_COLS } from '../../constants/gameConstants';
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, useMemo, useCallback } from 'react';
+import {
+  detectTileChanges,
+  setupNewGameAnimation,
+  generateAnimationDelays,
+  createPositionMap,
+} from '../../utils/tileAnimation';
 
 export function GameBoard() {
   const { state, actions } = useGameState();
@@ -11,135 +17,121 @@ export function GameBoard() {
   const [newTileIds, setNewTileIds] = useState<Set<string>>(new Set());
   const tileDelaysRef = useRef<Map<string, number>>(new Map());
 
-  const getTileAt = (row: number, col: number) => {
-    return state.tiles.find(t => t.row === row && t.col === col);
-  };
+  // Memoize tile lookups for performance
+  const tileMap = useMemo(() => {
+    const map = new Map<string, Tile>();
+    state.tiles.forEach(tile => {
+      map.set(`${tile.row}-${tile.col}`, tile);
+    });
+    return map;
+  }, [state.tiles]);
 
-  const isTileSelected = (tileId: string) => {
-    return state.selectedTiles.some(t => t.id === tileId);
-  };
+  const selectedTileIds = useMemo(() => {
+    return new Set(state.selectedTiles.map(t => t.id));
+  }, [state.selectedTiles]);
 
-  // Track new tiles when they appear
+  const getTileAt = useCallback((row: number, col: number) => {
+    return tileMap.get(`${row}-${col}`);
+  }, [tileMap]);
+
+  const isTileSelected = useCallback((tileId: string) => {
+    return selectedTileIds.has(tileId);
+  }, [selectedTileIds]);
+
+  // Effect 1: Detect new game (puzzle seed changed)
   useEffect(() => {
-    const currentTileIds = new Set(state.tiles.map(t => t.id));
     const currentPuzzleSeed = state.puzzle?.seed ?? null;
-    const isNewGame = previousPuzzleSeedRef.current !== null && 
-                      currentPuzzleSeed !== null && 
-                      previousPuzzleSeedRef.current !== currentPuzzleSeed;
-    
-    // If this is a new game (puzzle seed changed), animate all tiles
+    const isNewGame = previousPuzzleSeedRef.current !== null &&
+      currentPuzzleSeed !== null &&
+      previousPuzzleSeedRef.current !== currentPuzzleSeed;
+
     if (isNewGame && state.tiles.length > 0) {
-      const allNewIds = new Set<string>();
-      const newPositions = new Map<string, { row: number; col: number }>();
-      state.tiles.forEach(tile => {
-        allNewIds.add(tile.id);
-        const delay = (tile.col * 40) + (tile.row * 30) + (Math.random() * 200);
-        tileDelaysRef.current.set(tile.id, delay);
-        newPositions.set(tile.id, { row: tile.row, col: tile.col });
-      });
-      
-      setNewTileIds(allNewIds);
+      const animation = setupNewGameAnimation(state.tiles);
+      setNewTileIds(animation.tileIds);
+      tileDelaysRef.current = animation.delays;
+
       const timer = setTimeout(() => {
         setNewTileIds(new Set());
-        allNewIds.forEach(id => tileDelaysRef.current.delete(id));
+        tileDelaysRef.current.clear();
       }, 1000);
-      
-      previousTileIdsRef.current = currentTileIds;
-      previousTilePositionsRef.current = newPositions;
+
       previousPuzzleSeedRef.current = currentPuzzleSeed;
-      
-      return () => clearTimeout(timer);
-    }
-    
-    // Initialize on first render - animate all tiles on initial game load
-    if (previousTileIdsRef.current === null && state.tiles.length > 0) {
-      const allNewIds = new Set<string>();
-      const newPositions = new Map<string, { row: number; col: number }>();
-      state.tiles.forEach(tile => {
-        allNewIds.add(tile.id);
-        const delay = (tile.col * 40) + (tile.row * 30) + (Math.random() * 200);
-        tileDelaysRef.current.set(tile.id, delay);
-        newPositions.set(tile.id, { row: tile.row, col: tile.col });
-      });
-      
-      setNewTileIds(allNewIds);
-      const timer = setTimeout(() => {
-        setNewTileIds(new Set());
-        allNewIds.forEach(id => tileDelaysRef.current.delete(id));
-      }, 1000);
-      
-      previousTileIdsRef.current = currentTileIds;
-      previousTilePositionsRef.current = newPositions;
-      previousPuzzleSeedRef.current = currentPuzzleSeed;
-      
-      return () => clearTimeout(timer);
-    }
-    
-    const previousIds = previousTileIdsRef.current;
-    const previousPositions = previousTilePositionsRef.current;
-    
-    // Find tiles that are new (in current but not in previous)
-    const newIds = new Set<string>();
-    currentTileIds.forEach(id => {
-      if (!previousIds.has(id)) {
-        newIds.add(id);
-        // Generate and store a random delay for this tile
-        const tile = state.tiles.find(t => t.id === id);
-        if (tile) {
-          const delay = (tile.col * 40) + (tile.row * 30) + (Math.random() * 200);
-          tileDelaysRef.current.set(id, delay);
-        }
-      }
-    });
+      previousTileIdsRef.current = new Set(state.tiles.map(t => t.id));
+      previousTilePositionsRef.current = createPositionMap(state.tiles);
 
-    // Find tiles that have moved positions (same ID but different row/col)
-    const movedIds = new Set<string>();
-    state.tiles.forEach(tile => {
-      if (previousIds.has(tile.id)) {
-        const previousPos = previousPositions.get(tile.id);
-        if (previousPos && (previousPos.row !== tile.row || previousPos.col !== tile.col)) {
-          movedIds.add(tile.id);
-          // Generate delay based on how far they moved
-          const rowDiff = Math.abs(previousPos.row - tile.row);
-          const delay = (tile.col * 40) + (tile.row * 30) + (rowDiff * 50);
-          tileDelaysRef.current.set(tile.id, delay);
-        }
-      }
-    });
-
-    // Combine new and moved tiles for animation
-    const tilesToAnimate = new Set([...newIds, ...movedIds]);
-
-    if (tilesToAnimate.size > 0) {
-      setNewTileIds(tilesToAnimate);
-      // Clear the animation flags and delays after animation completes
-      const timer = setTimeout(() => {
-        setNewTileIds(new Set());
-        tilesToAnimate.forEach(id => tileDelaysRef.current.delete(id));
-      }, 1000); // Slightly longer than animation duration
-      
-      // Update previous tile IDs and positions after detecting changes
-      previousTileIdsRef.current = currentTileIds;
-      const newPositions = new Map<string, { row: number; col: number }>();
-      state.tiles.forEach(tile => {
-        newPositions.set(tile.id, { row: tile.row, col: tile.col });
-      });
-      previousTilePositionsRef.current = newPositions;
-      
       return () => clearTimeout(timer);
     }
 
-    // Update previous tile IDs and positions even if no animations
-    previousTileIdsRef.current = currentTileIds;
-    const newPositions = new Map<string, { row: number; col: number }>();
-    state.tiles.forEach(tile => {
-      newPositions.set(tile.id, { row: tile.row, col: tile.col });
-    });
-    previousTilePositionsRef.current = newPositions;
     if (currentPuzzleSeed !== null) {
       previousPuzzleSeedRef.current = currentPuzzleSeed;
     }
+  }, [state.puzzle?.seed, state.tiles]);
+
+  // Effect 2: Initialize on first render
+  useEffect(() => {
+    if (previousTileIdsRef.current === null && state.tiles.length > 0) {
+      const animation = setupNewGameAnimation(state.tiles);
+      setNewTileIds(animation.tileIds);
+      tileDelaysRef.current = animation.delays;
+
+      const timer = setTimeout(() => {
+        setNewTileIds(new Set());
+        tileDelaysRef.current.clear();
+      }, 1000);
+
+      previousTileIdsRef.current = new Set(state.tiles.map(t => t.id));
+      previousTilePositionsRef.current = createPositionMap(state.tiles);
+      if (state.puzzle?.seed !== null && state.puzzle?.seed !== undefined) {
+        previousPuzzleSeedRef.current = state.puzzle.seed;
+      }
+
+      return () => clearTimeout(timer);
+    }
   }, [state.tiles, state.puzzle?.seed]);
+
+  // Effect 3: Track tile changes (new and moved tiles)
+  useEffect(() => {
+    const currentTileIds = new Set(state.tiles.map(t => t.id));
+    const previousIds = previousTileIdsRef.current;
+    const previousPositions = previousTilePositionsRef.current;
+
+    // Skip if this is initial render or new game (handled by other effects)
+    if (previousIds === null) {
+      return;
+    }
+
+    const changes = detectTileChanges(state.tiles, previousIds, previousPositions);
+    const tilesToAnimate = new Set([...changes.newTileIds, ...changes.movedTileIds]);
+
+    if (tilesToAnimate.size > 0) {
+      const delays = generateAnimationDelays(
+        state.tiles.filter(t => tilesToAnimate.has(t.id)),
+        previousPositions
+      );
+
+      // Update delays map
+      delays.forEach((delay, id) => {
+        tileDelaysRef.current.set(id, delay);
+      });
+
+      setNewTileIds(tilesToAnimate);
+
+      const timer = setTimeout(() => {
+        setNewTileIds(new Set());
+        tilesToAnimate.forEach(id => tileDelaysRef.current.delete(id));
+      }, 1000);
+
+      // Update tracking refs
+      previousTileIdsRef.current = currentTileIds;
+      previousTilePositionsRef.current = createPositionMap(state.tiles);
+
+      return () => clearTimeout(timer);
+    }
+
+    // Update tracking refs even if no animations
+    previousTileIdsRef.current = currentTileIds;
+    previousTilePositionsRef.current = createPositionMap(state.tiles);
+  }, [state.tiles]);
 
   const handleTileClick = (tileId: string) => {
     const isSelected = isTileSelected(tileId);

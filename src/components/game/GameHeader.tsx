@@ -1,6 +1,7 @@
 import { HelpCircle, Calendar, Shuffle } from 'lucide-react';
 import { useGameState } from '../../contexts/GameContext';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { useTooltipHandler } from '../../hooks/useTooltipHandler';
 
 interface GameHeaderProps {
   onHelpClick: () => void;
@@ -9,29 +10,55 @@ interface GameHeaderProps {
 export function GameHeader({ onHelpClick }: GameHeaderProps) {
   const { state, actions } = useGameState();
   const [hasInteracted, setHasInteracted] = useState(false);
-  const dailyTimeoutRef = useRef<number | null>(null);
-  const casualTimeoutRef = useRef<number | null>(null);
-  const pointsTimeoutRef = useRef<number | null>(null);
-  const wordsTimeoutRef = useRef<number | null>(null);
-  const dailyTooltipShownRef = useRef(false);
-  const casualTooltipShownRef = useRef(false);
 
-  useEffect(() => {
-    return () => {
-      if (dailyTimeoutRef.current) {
-        clearTimeout(dailyTimeoutRef.current);
+  // Tooltip handlers using the reusable hook
+  const dailyTooltip = useTooltipHandler({
+    tooltip: { title: 'Daily Mode', description: 'Play the same puzzle as everyone else today' },
+    delay: 500,
+    setTooltip: actions.setTooltip,
+    onClick: (e) => {
+      // Check if tooltip is currently shown (from hook or elsewhere)
+      if (state.tooltip) {
+        e.preventDefault();
+        e.stopPropagation();
+        setTimeout(() => {
+          actions.setTooltip(null);
+        }, 100);
+        return;
       }
-      if (casualTimeoutRef.current) {
-        clearTimeout(casualTimeoutRef.current);
+      actions.setGameMode('daily');
+    },
+  });
+
+  const casualTooltip = useTooltipHandler({
+    tooltip: { title: 'Casual Mode', description: 'Play unlimited random puzzles' },
+    delay: 500,
+    setTooltip: actions.setTooltip,
+    onClick: (e) => {
+      // Check if tooltip is currently shown (from hook or elsewhere)
+      if (state.tooltip) {
+        e.preventDefault();
+        e.stopPropagation();
+        setTimeout(() => {
+          actions.setTooltip(null);
+        }, 100);
+        return;
       }
-      if (pointsTimeoutRef.current) {
-        clearTimeout(pointsTimeoutRef.current);
-      }
-      if (wordsTimeoutRef.current) {
-        clearTimeout(wordsTimeoutRef.current);
-      }
-    };
-  }, []);
+      actions.setGameMode('casual');
+    },
+  });
+
+  const pointsTooltip = useTooltipHandler({
+    tooltip: { title: 'Total Score', description: 'Points from all words this game' },
+    delay: 500,
+    setTooltip: actions.setTooltip,
+  });
+
+  const wordsTooltip = useTooltipHandler({
+    tooltip: { title: 'Words Remaining', description: 'Number of words left to submit' },
+    delay: 500,
+    setTooltip: actions.setTooltip,
+  });
 
   // Reset glimmer when game status changes to 'playing' (new game started)
   useEffect(() => {
@@ -58,129 +85,6 @@ export function GameHeader({ onHelpClick }: GameHeaderProps) {
     };
   }, [hasInteracted, state.gameStatus]);
 
-  const handleDailyMouseDown = () => {
-    dailyTooltipShownRef.current = false;
-    dailyTimeoutRef.current = window.setTimeout(() => {
-      actions.setTooltip({ title: 'Daily Mode', description: 'Play the same puzzle as everyone else today' });
-      dailyTooltipShownRef.current = true;
-    }, 500);
-  };
-
-  const handleDailyMouseUp = () => {
-    if (dailyTimeoutRef.current) {
-      clearTimeout(dailyTimeoutRef.current);
-      dailyTimeoutRef.current = null;
-    }
-  };
-
-  const handleDailyMouseLeave = () => {
-    handleDailyMouseUp();
-    actions.setTooltip(null);
-    dailyTooltipShownRef.current = false;
-  };
-
-  const handleDailyClick = (e: React.MouseEvent) => {
-    if (dailyTooltipShownRef.current || state.tooltip) {
-      e.preventDefault();
-      e.stopPropagation();
-      setTimeout(() => {
-        dailyTooltipShownRef.current = false;
-        actions.setTooltip(null);
-      }, 100);
-      return;
-    }
-    actions.setGameMode('daily');
-  };
-
-  const handleDailyTouchEnd = () => {
-    handleDailyMouseUp();
-    if (dailyTooltipShownRef.current || state.tooltip) {
-      setTimeout(() => {
-        dailyTooltipShownRef.current = false;
-        actions.setTooltip(null);
-      }, 100);
-    }
-  };
-
-  const handleCasualMouseDown = () => {
-    casualTooltipShownRef.current = false;
-    casualTimeoutRef.current = window.setTimeout(() => {
-      actions.setTooltip({ title: 'Casual Mode', description: 'Play unlimited random puzzles' });
-      casualTooltipShownRef.current = true;
-    }, 500);
-  };
-
-  const handleCasualMouseUp = () => {
-    if (casualTimeoutRef.current) {
-      clearTimeout(casualTimeoutRef.current);
-      casualTimeoutRef.current = null;
-    }
-  };
-
-  const handleCasualMouseLeave = () => {
-    handleCasualMouseUp();
-    actions.setTooltip(null);
-    casualTooltipShownRef.current = false;
-  };
-
-  const handleCasualClick = (e: React.MouseEvent) => {
-    if (casualTooltipShownRef.current || state.tooltip) {
-      e.preventDefault();
-      e.stopPropagation();
-      setTimeout(() => {
-        casualTooltipShownRef.current = false;
-        actions.setTooltip(null);
-      }, 100);
-      return;
-    }
-    actions.setGameMode('casual');
-  };
-
-  const handleCasualTouchEnd = () => {
-    handleCasualMouseUp();
-    if (casualTooltipShownRef.current || state.tooltip) {
-      setTimeout(() => {
-        casualTooltipShownRef.current = false;
-        actions.setTooltip(null);
-      }, 100);
-    }
-  };
-
-  const handlePointsMouseDown = () => {
-    pointsTimeoutRef.current = window.setTimeout(() => {
-      actions.setTooltip({ title: 'Total Score', description: 'Points from all words this game' });
-    }, 500);
-  };
-
-  const handlePointsMouseUp = () => {
-    if (pointsTimeoutRef.current) {
-      clearTimeout(pointsTimeoutRef.current);
-      pointsTimeoutRef.current = null;
-    }
-  };
-
-  const handlePointsMouseLeave = () => {
-    handlePointsMouseUp();
-    actions.setTooltip(null);
-  };
-
-  const handleWordsMouseDown = () => {
-    wordsTimeoutRef.current = window.setTimeout(() => {
-      actions.setTooltip({ title: 'Words Remaining', description: 'Number of words left to submit' });
-    }, 500);
-  };
-
-  const handleWordsMouseUp = () => {
-    if (wordsTimeoutRef.current) {
-      clearTimeout(wordsTimeoutRef.current);
-      wordsTimeoutRef.current = null;
-    }
-  };
-
-  const handleWordsMouseLeave = () => {
-    handleWordsMouseUp();
-    actions.setTooltip(null);
-  };
 
   return (
     <header className="w-full max-w-[25.2rem] mx-auto px-4 pt-2 pb-1 flex-shrink-0">
@@ -191,11 +95,11 @@ export function GameHeader({ onHelpClick }: GameHeaderProps) {
           <div className="relative">
             <div
               className="bg-gray-200 rounded-lg w-12 h-12 flex flex-col items-center justify-center cursor-help"
-              onMouseDown={handlePointsMouseDown}
-              onMouseUp={handlePointsMouseUp}
-              onMouseLeave={handlePointsMouseLeave}
-              onTouchStart={handlePointsMouseDown}
-              onTouchEnd={handlePointsMouseUp}
+              onMouseDown={pointsTooltip.handleMouseDown}
+              onMouseUp={pointsTooltip.handleMouseUp}
+              onMouseLeave={pointsTooltip.handleMouseLeave}
+              onTouchStart={pointsTooltip.handleTouchStart}
+              onTouchEnd={pointsTooltip.handleTouchEnd}
             >
               <div className="text-xl font-bold text-gray-900 text-center leading-tight">
                 {state.totalScore}
@@ -209,11 +113,11 @@ export function GameHeader({ onHelpClick }: GameHeaderProps) {
           <div className="relative">
             <div
               className="bg-gray-200 rounded-lg w-12 h-12 flex flex-col items-center justify-center cursor-help"
-              onMouseDown={handleWordsMouseDown}
-              onMouseUp={handleWordsMouseUp}
-              onMouseLeave={handleWordsMouseLeave}
-              onTouchStart={handleWordsMouseDown}
-              onTouchEnd={handleWordsMouseUp}
+              onMouseDown={wordsTooltip.handleMouseDown}
+              onMouseUp={wordsTooltip.handleMouseUp}
+              onMouseLeave={wordsTooltip.handleMouseLeave}
+              onTouchStart={wordsTooltip.handleTouchStart}
+              onTouchEnd={wordsTooltip.handleTouchEnd}
             >
               <div className="text-xl font-bold text-gray-900 text-center leading-tight">
                 {state.wordsRemaining}
@@ -226,13 +130,13 @@ export function GameHeader({ onHelpClick }: GameHeaderProps) {
 
           <div className="relative">
             <button
-              onClick={handleDailyClick}
+              onClick={dailyTooltip.handleClick}
               disabled={state.gameStatus === 'loading'}
-              onMouseDown={handleDailyMouseDown}
-              onMouseUp={handleDailyMouseUp}
-              onMouseLeave={handleDailyMouseLeave}
-              onTouchStart={handleDailyMouseDown}
-              onTouchEnd={handleDailyTouchEnd}
+              onMouseDown={dailyTooltip.handleMouseDown}
+              onMouseUp={dailyTooltip.handleMouseUp}
+              onMouseLeave={dailyTooltip.handleMouseLeave}
+              onTouchStart={dailyTooltip.handleTouchStart}
+              onTouchEnd={dailyTooltip.handleTouchEnd}
               className={`
                 w-10 h-12 rounded-lg font-semibold
                 transition-all duration-200 flex items-center justify-center
@@ -253,13 +157,13 @@ export function GameHeader({ onHelpClick }: GameHeaderProps) {
 
           <div className="relative">
             <button
-              onClick={handleCasualClick}
+              onClick={casualTooltip.handleClick}
               disabled={state.gameStatus === 'loading'}
-              onMouseDown={handleCasualMouseDown}
-              onMouseUp={handleCasualMouseUp}
-              onMouseLeave={handleCasualMouseLeave}
-              onTouchStart={handleCasualMouseDown}
-              onTouchEnd={handleCasualTouchEnd}
+              onMouseDown={casualTooltip.handleMouseDown}
+              onMouseUp={casualTooltip.handleMouseUp}
+              onMouseLeave={casualTooltip.handleMouseLeave}
+              onTouchStart={casualTooltip.handleTouchStart}
+              onTouchEnd={casualTooltip.handleTouchEnd}
               className={`
                 w-10 h-12 rounded-lg font-semibold
                 transition-all duration-200 flex items-center justify-center
