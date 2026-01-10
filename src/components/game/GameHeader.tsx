@@ -144,10 +144,15 @@ export function GameHeader({ onHelpClick }: GameHeaderProps) {
                   ? 'cursor-not-allowed'
                   : 'active:scale-95'
                 }
-                ${state.gameMode === 'daily'
-                  ? 'bg-gray-700 text-white shadow-sm'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }
+                ${(() => {
+                  const isDailyAlreadyPlayed = state.dailyGameAlreadyPlayed !== null;
+                  if (isDailyAlreadyPlayed) {
+                    return 'bg-gray-300 text-gray-500 cursor-pointer';
+                  }
+                  return state.gameMode === 'daily'
+                    ? 'bg-gray-700 text-white shadow-sm'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300';
+                })()}
               `}
               aria-label="Daily mode"
             >

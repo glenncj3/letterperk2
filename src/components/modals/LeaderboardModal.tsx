@@ -253,7 +253,7 @@ export function LeaderboardModal({ isOpen, onClose, openedFromDailyAlreadyPlayed
                                     disabled={isDailyGameDisabled}
                                     className={`py-4 font-semibold rounded-xl transition-colors flex items-center justify-center ${
                                         isDailyGameDisabled
-                                            ? 'bg-gray-400 text-white cursor-not-allowed opacity-60'
+                                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                                             : 'bg-gray-700 hover:bg-gray-800 text-white'
                                     }`}
                                 >
@@ -300,7 +300,7 @@ export function LeaderboardModal({ isOpen, onClose, openedFromDailyAlreadyPlayed
 
                         <button
                             disabled
-                            className="py-4 bg-gray-400 text-white font-semibold rounded-xl transition-colors flex items-center justify-center cursor-not-allowed opacity-60"
+                            className="py-4 bg-gray-300 text-gray-500 font-semibold rounded-xl transition-colors flex items-center justify-center cursor-not-allowed"
                         >
                             <Trophy className="w-6 h-6" />
                         </button>

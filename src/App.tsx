@@ -50,7 +50,7 @@ function GameContainer() {
       />
 
       <DailyAlreadyPlayedModal
-        isOpen={state.dailyGameAlreadyPlayed !== null && state.gameStatus !== 'gameover'}
+        isOpen={state.dailyGameAlreadyPlayed !== null && state.gameStatus !== 'gameover' && state.gameMode === 'daily' && !state.isLoading}
         onClose={() => actions.clearDailyGameAlreadyPlayed()}
         score={state.dailyGameAlreadyPlayed?.score ?? 0}
       />

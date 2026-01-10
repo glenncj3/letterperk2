@@ -78,7 +78,7 @@ export function GameOverModal({ isOpen, onPlayAgain }: GameOverModalProps) {
             disabled={isDailyGameDisabled}
             className={`py-4 font-semibold rounded-xl transition-colors flex items-center justify-center ${
               isDailyGameDisabled
-                ? 'bg-gray-400 text-white cursor-not-allowed opacity-60'
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 : 'bg-gray-700 hover:bg-gray-800 text-white'
             }`}
           >

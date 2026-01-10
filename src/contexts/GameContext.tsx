@@ -196,8 +196,12 @@ function gameReducer(state: GameState, action: GameAction): GameState {
     case 'SET_DAILY_GAME_ALREADY_PLAYED':
       return { ...state, dailyGameAlreadyPlayed: action.result };
 
-    case 'RESET_GAME':
+    case 'RESET_GAME': {
+      // Always preserve dailyGameAlreadyPlayed from current state
+      // The caller is responsible for setting it before RESET_GAME if needed
+      // This avoids issues with React batching state updates
       return { ...initialState, gameMode: state.gameMode, dailyGameAlreadyPlayed: state.dailyGameAlreadyPlayed };
+    }
 
     default:
       return state;
@@ -215,6 +219,24 @@ export function GameProvider({ children }: { children: ReactNode }) {
     // Just mark loading as complete
     dispatch({ type: 'SET_LOADING', isLoading: false });
   }, []);
+
+  // Check localStorage for daily game already played when game mode is casual
+  useEffect(() => {
+    if (state.gameMode === 'casual' && state.gameStatus === 'playing' && state.dailyGameAlreadyPlayed === null) {
+      const today = getTodayDateString();
+      const result = getDailyGameResult(today);
+      if (result) {
+        dispatch({
+          type: 'SET_DAILY_GAME_ALREADY_PLAYED',
+          result: {
+            score: result.score,
+            wordCount: result.wordCount,
+            puzzleDate: result.puzzleDate,
+          },
+        });
+      }
+    }
+  }, [state.gameMode, state.gameStatus, state.dailyGameAlreadyPlayed]);
 
   // Memoize word state calculation to avoid unnecessary recalculations
   const wordState = useMemo(() => {
@@ -335,15 +357,40 @@ export function GameProvider({ children }: { children: ReactNode }) {
           },
         });
         dispatch({ type: 'SET_LOADING', isLoading: false });
+        // Set game mode to daily so modal knows we tried to start daily
+        dispatch({ type: 'SET_GAME_MODE', mode: 'daily' });
         return;
       }
     }
 
-    // Clear the daily game already played state when starting a new game
-    dispatch({ type: 'SET_DAILY_GAME_ALREADY_PLAYED', result: null });
     dispatch({ type: 'SET_LOADING', isLoading: true });
-    dispatch({ type: 'RESET_GAME' });
+    // Set game mode FIRST so RESET_GAME can check it
     dispatch({ type: 'SET_GAME_MODE', mode });
+    
+    // For casual mode, check localStorage and set state BEFORE RESET_GAME
+    // This ensures RESET_GAME can preserve it
+    let dailyGameResult: { score: number; wordCount: number; puzzleDate: string } | null = null;
+    if (mode === 'casual') {
+      const today = getTodayDateString();
+      const result = getDailyGameResult(today);
+      if (result) {
+        dailyGameResult = {
+          score: result.score,
+          wordCount: result.wordCount,
+          puzzleDate: result.puzzleDate,
+        };
+        dispatch({ type: 'SET_DAILY_GAME_ALREADY_PLAYED', result: dailyGameResult });
+      }
+    }
+    
+    dispatch({ type: 'RESET_GAME' });
+    
+    // After RESET_GAME, restore the daily game already played state for casual mode
+    if (mode === 'casual' && dailyGameResult) {
+      dispatch({ type: 'SET_DAILY_GAME_ALREADY_PLAYED', result: dailyGameResult });
+    } else if (mode !== 'casual') {
+      dispatch({ type: 'SET_DAILY_GAME_ALREADY_PLAYED', result: null });
+    }
 
     try {
       const puzzleRepo = RepositoryFactory.getPuzzleRepository();
@@ -527,8 +574,27 @@ export function GameProvider({ children }: { children: ReactNode }) {
         to_mode: mode,
       });
     }
-    // Clear daily game already played state when switching modes
-    dispatch({ type: 'SET_DAILY_GAME_ALREADY_PLAYED', result: null });
+    
+    // When switching to casual, check if daily has been played and preserve that state
+    // so the button stays grayed out
+    if (mode === 'casual') {
+      const today = getTodayDateString();
+      const result = getDailyGameResult(today);
+      if (result) {
+        dispatch({
+          type: 'SET_DAILY_GAME_ALREADY_PLAYED',
+          result: {
+            score: result.score,
+            wordCount: result.wordCount,
+            puzzleDate: result.puzzleDate,
+          },
+        });
+      }
+    } else {
+      // When switching to daily, clear the state (it will be set again if daily has already been played)
+      dispatch({ type: 'SET_DAILY_GAME_ALREADY_PLAYED', result: null });
+    }
+    
     await initializeGame(mode);
   }, [initializeGame, state.gameMode]);
 
