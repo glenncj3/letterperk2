@@ -1,11 +1,61 @@
 import { Delete, RefreshCw } from 'lucide-react';
 import { useGameState } from '../../contexts/GameContext';
 import { BONUS_COLORS } from '../../constants/gameConstants';
+import { useRef, useEffect } from 'react';
 
 export function WordDisplay() {
   const { state, actions } = useGameState();
+  const clearTimeoutRef = useRef<number | null>(null);
+  const clearTriggeredRef = useRef(false);
 
   const hasSelectedTiles = state.selectedTiles.length > 0;
+
+  useEffect(() => {
+    return () => {
+      if (clearTimeoutRef.current) {
+        clearTimeout(clearTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleBackspaceMouseDown = () => {
+    clearTriggeredRef.current = false;
+    if (hasSelectedTiles) {
+      clearTimeoutRef.current = window.setTimeout(() => {
+        actions.clearSelection();
+        clearTriggeredRef.current = true;
+      }, 750);
+    }
+  };
+
+  const handleBackspaceMouseUp = () => {
+    if (clearTimeoutRef.current) {
+      clearTimeout(clearTimeoutRef.current);
+      clearTimeoutRef.current = null;
+    }
+  };
+
+  const handleBackspaceMouseLeave = () => {
+    handleBackspaceMouseUp();
+  };
+
+  const handleBackspaceTouchEnd = () => {
+    handleBackspaceMouseUp();
+  };
+
+  const handleBackspaceClick = (e: React.MouseEvent) => {
+    // If clear was triggered, prevent the normal removeLastTile action
+    if (clearTriggeredRef.current) {
+      e.preventDefault();
+      e.stopPropagation();
+      setTimeout(() => {
+        clearTriggeredRef.current = false;
+      }, 100);
+      return;
+    }
+    // Normal click behavior - remove last tile
+    actions.removeLastTile();
+  };
 
   return (
     <div className="w-full max-w-[25.2rem] mx-auto px-4 mb-3 flex-shrink-0 relative">
@@ -71,7 +121,12 @@ export function WordDisplay() {
       </div>
       {hasSelectedTiles && (
         <button
-          onClick={actions.removeLastTile}
+          onClick={handleBackspaceClick}
+          onMouseDown={handleBackspaceMouseDown}
+          onMouseUp={handleBackspaceMouseUp}
+          onMouseLeave={handleBackspaceMouseLeave}
+          onTouchStart={handleBackspaceMouseDown}
+          onTouchEnd={handleBackspaceTouchEnd}
           className="absolute right-4 top-[35%] -translate-y-1/2 bg-gray-200 rounded-lg w-10 h-12 flex items-center justify-center hover:bg-gray-300 transition-all duration-200 active:scale-95"
           aria-label="Remove last tile"
         >
