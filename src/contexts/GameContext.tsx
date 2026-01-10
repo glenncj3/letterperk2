@@ -52,6 +52,7 @@ type GameAction =
   | { type: 'SELECT_TILE'; tileId: string }
   | { type: 'DESELECT_TILE'; tileId: string }
   | { type: 'CLEAR_SELECTION' }
+  | { type: 'REMOVE_LAST_TILE' }
   | { type: 'UPDATE_WORD_STATE'; word: string; isValid: boolean; score: GameState['currentWordScore'] }
   | { type: 'COMPLETE_WORD'; word: CompletedWord; newTiles: Tile[]; newIndices: [number, number, number] }
   | { type: 'REFRESH_TILES'; newTiles: Tile[] }
@@ -114,6 +115,15 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         isWordValid: false,
         currentWordScore: { baseScore: 0, bonuses: [], finalScore: 0 },
       };
+
+    case 'REMOVE_LAST_TILE': {
+      if (state.selectedTiles.length === 0) return state;
+      const newSelectedTiles = state.selectedTiles.slice(0, -1);
+      return {
+        ...state,
+        selectedTiles: newSelectedTiles,
+      };
+    }
 
     case 'UPDATE_WORD_STATE':
       return {
@@ -345,6 +355,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'CLEAR_SELECTION' });
   }, []);
 
+  const removeLastTile = useCallback(() => {
+    dispatch({ type: 'REMOVE_LAST_TILE' });
+  }, []);
+
   const submitWord = useCallback(async () => {
     if (!state.isWordValid || state.selectedTiles.length < 2) {
       const error = new GameError(ErrorType.INVALID_WORD, 'Invalid word');
@@ -494,6 +508,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     selectTile,
     deselectTile,
     clearSelection,
+    removeLastTile,
     submitWord,
     refreshTiles,
     shuffleTilesInGrid,

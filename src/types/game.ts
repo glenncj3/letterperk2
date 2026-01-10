@@ -104,6 +104,7 @@ export interface GameActions {
   selectTile: (tileId: string) => void;
   deselectTile: (tileId: string) => void;
   clearSelection: () => void;
+  removeLastTile: () => void;
   submitWord: () => Promise<void>;
   refreshTiles: () => void;
   shuffleTilesInGrid: () => void;

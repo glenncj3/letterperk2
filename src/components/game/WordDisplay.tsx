@@ -1,4 +1,4 @@
-import { X, RefreshCw } from 'lucide-react';
+import { Delete, RefreshCw } from 'lucide-react';
 import { useGameState } from '../../contexts/GameContext';
 import { BONUS_COLORS } from '../../constants/gameConstants';
 
@@ -8,7 +8,7 @@ export function WordDisplay() {
   const hasSelectedTiles = state.selectedTiles.length > 0;
 
   return (
-    <div className="w-full max-w-[25.2rem] mx-auto px-4 mb-3 flex-shrink-0">
+    <div className="w-full max-w-[25.2rem] mx-auto px-4 mb-3 flex-shrink-0 relative">
       <div className="text-center min-h-[88px] flex flex-col justify-center relative">
         {state.tooltip && (
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-none w-full max-w-[20rem] px-4">
@@ -24,8 +24,8 @@ export function WordDisplay() {
           </div>
         ) : (
           <>
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <div className="text-4xl font-bold text-gray-900 tracking-wider flex items-center">
+            <div className="mb-2">
+              <div className="text-4xl font-bold text-gray-900 tracking-wider flex items-center justify-center">
                 {state.currentWord.split('').map((letter, index) => (
                   <span
                     key={`${letter}-${index}`}
@@ -38,13 +38,6 @@ export function WordDisplay() {
                   </span>
                 ))}
               </div>
-              <button
-                onClick={actions.clearSelection}
-                className="w-6 h-6 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center transition-colors"
-                aria-label="Clear word"
-              >
-                <X className="w-3.5 h-3.5 text-gray-500" />
-              </button>
             </div>
 
             <div className="flex items-center justify-center gap-2">
@@ -76,6 +69,15 @@ export function WordDisplay() {
           </>
         )}
       </div>
+      {hasSelectedTiles && (
+        <button
+          onClick={actions.removeLastTile}
+          className="absolute right-4 top-[35%] -translate-y-1/2 bg-gray-200 rounded-lg w-10 h-12 flex items-center justify-center hover:bg-gray-300 transition-all duration-200 active:scale-95"
+          aria-label="Remove last tile"
+        >
+          <Delete className="w-6 h-6 text-gray-600" />
+        </button>
+      )}
     </div>
   );
 }
