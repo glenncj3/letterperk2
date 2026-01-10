@@ -1,4 +1,4 @@
-import { X } from 'lucide-react';
+import { X, Calendar, Dices } from 'lucide-react';
 import { BONUS_COLORS } from '../../constants/gameConstants';
 import { trackEvent } from '../../services/analytics';
 import { useEffect } from 'react';
@@ -49,8 +49,8 @@ export function HowToPlayModal({ isOpen, onClose }: HowToPlayModalProps) {
           </section>
 
           <section>
-            <p className="text-gray-700 mb-3">
-              Play the Daily game for the leaderboard, or have fun in Casual mode!
+            <p className="text-gray-700 mb-3 flex items-center gap-2">
+              Play the <span className="inline-flex items-center gap-1"><Calendar className="w-4 h-4" /> Daily</span> game for the leaderboard, or have fun in <span className="inline-flex items-center gap-1"><Dices className="w-4 h-4" /> Casual</span> mode!
             </p>
           </section>
 

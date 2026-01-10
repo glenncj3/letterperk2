@@ -1,4 +1,4 @@
-import { Calendar, Shuffle, Trophy, Share2 } from 'lucide-react';
+import { Calendar, Dices, Trophy, Share2 } from 'lucide-react';
 import { useGameState } from '../../contexts/GameContext';
 import { generateShareText, copyToClipboard } from '../../utils/shareUtils';
 import { LeaderboardModal } from './LeaderboardModal';
@@ -78,7 +78,7 @@ export function GameOverModal({ isOpen, onPlayAgain }: GameOverModalProps) {
             onClick={() => actions.setGameMode('casual')}
             className="py-4 bg-gray-700 hover:bg-gray-800 text-white font-semibold rounded-xl transition-colors flex items-center justify-center"
           >
-            <Shuffle className="w-6 h-6" />
+            <Dices className="w-6 h-6" />
           </button>
 
           <button

@@ -1,4 +1,4 @@
-import { Send, RefreshCw } from 'lucide-react';
+import { Send, RefreshCw, Shuffle } from 'lucide-react';
 import { useGameState } from '../../contexts/GameContext';
 import { useRef, useEffect } from 'react';
 import { trackEvent } from '../../services/analytics';
@@ -74,31 +74,51 @@ export function GameControls() {
 
   const canSubmit = state.isWordValid && state.selectedTiles.length >= 2;
   const canRedraw = state.tradesAvailable > 0 && state.gameStatus === 'playing' && state.selectedTiles.length > 0;
+  const canShuffle = state.gameStatus === 'playing' && state.tiles.length > 0;
+
+  const handleShuffleClick = () => {
+    if (!canShuffle) return;
+    actions.shuffleTilesInGrid();
+  };
 
   return (
-    <div className="w-full max-w-[25.2rem] mx-auto px-4 pb-2 mt-4 flex-shrink-0">
+    <div className="w-full max-w-sm mx-auto px-4 pb-2 mt-4 flex-shrink-0">
       <div className="flex gap-2">
-        <div className="relative flex-1">
-          <button
-            onClick={handleRedrawClick}
-            onMouseDown={handleRedrawMouseDown}
-            onMouseUp={handleRedrawMouseUp}
-            onMouseLeave={handleRedrawMouseLeave}
-            onTouchStart={handleRedrawMouseDown}
-            onTouchEnd={handleRedrawTouchEnd}
-            className={`
-              w-full py-2.5 px-3 rounded-xl font-semibold text-sm
-              transition-all duration-200 flex items-center justify-center gap-2
-              ${canRedraw
-                ? 'bg-gray-500 hover:bg-gray-700 text-white active:scale-95'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              }
-            `}
-          >
-            <RefreshCw className="w-4 h-4 drop-shadow-md" />
-            <span className="drop-shadow-md">Trade ({state.tradesAvailable})</span>
-          </button>
-        </div>
+        <button
+          onClick={handleRedrawClick}
+          onMouseDown={handleRedrawMouseDown}
+          onMouseUp={handleRedrawMouseUp}
+          onMouseLeave={handleRedrawMouseLeave}
+          onTouchStart={handleRedrawMouseDown}
+          onTouchEnd={handleRedrawTouchEnd}
+          className={`
+            flex-1 py-2.5 px-3 rounded-xl font-semibold text-sm
+            transition-all duration-200 flex items-center justify-center gap-2
+            ${canRedraw
+              ? 'bg-gray-500 hover:bg-gray-700 text-white active:scale-95'
+              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            }
+          `}
+        >
+          <RefreshCw className="w-4 h-4 drop-shadow-md" />
+          <span className="drop-shadow-md">Trade ({state.tradesAvailable})</span>
+        </button>
+
+        <button
+          onClick={handleShuffleClick}
+          disabled={!canShuffle}
+          className={`
+            flex-1 py-2.5 px-3 rounded-xl font-semibold text-sm
+            transition-all duration-200 flex items-center justify-center gap-2
+            ${canShuffle
+              ? 'bg-blue-800 hover:bg-blue-900 text-white active:scale-95'
+              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            }
+          `}
+        >
+          <Shuffle className="w-4 h-4 drop-shadow-md" />
+          <span className="drop-shadow-md">Shuffle</span>
+        </button>
 
         <button
           onClick={actions.submitWord}

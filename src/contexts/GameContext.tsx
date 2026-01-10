@@ -2,7 +2,7 @@ import { createContext, useContext, useReducer, ReactNode, useCallback, useEffec
 import { GameState, GameActions, GameMode, Tile, CompletedWord } from '../types/game';
 import { MAX_WORDS_PER_GAME, GRID_COLS, TILES_PER_COLUMN } from '../constants/gameConstants';
 import { calculateScore } from '../utils/bonusUtils';
-import { applyGravity } from '../utils/tileUtils';
+import { applyGravity, shuffleTiles } from '../utils/tileUtils';
 import { replaceTilesInColumns } from '../utils/tileReplacement';
 import { calculateWordState } from '../utils/wordCalculation';
 import { loadDictionary } from '../lib/dictionary';
@@ -55,6 +55,7 @@ type GameAction =
   | { type: 'UPDATE_WORD_STATE'; word: string; isValid: boolean; score: GameState['currentWordScore'] }
   | { type: 'COMPLETE_WORD'; word: CompletedWord; newTiles: Tile[]; newIndices: [number, number, number] }
   | { type: 'REFRESH_TILES'; newTiles: Tile[] }
+  | { type: 'SHUFFLE_TILES'; newTiles: Tile[] }
   | { type: 'SET_ERROR'; error: string | null }
   | { type: 'SET_LOADING'; isLoading: boolean }
   | { type: 'SET_TOOLTIP'; tooltip: { title: string; description: string } | null }
@@ -156,6 +157,13 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         currentWord: '',
         isWordValid: false,
         currentWordScore: { baseScore: 0, bonuses: [], finalScore: 0 },
+      };
+
+    case 'SHUFFLE_TILES':
+      return {
+        ...state,
+        tiles: action.newTiles,
+        // Keep selection intact after shuffle
       };
 
     case 'SET_ERROR':
@@ -436,6 +444,24 @@ export function GameProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'SET_COLUMN_SEQUENCES', sequences: state.columnSequences, indices: newIndices, randomFunc: state.randomFunc });
   }, [state.tradesAvailable, state.selectedTiles, state.tiles, state.columnDrawIndices, state.columnSequences, state.puzzle, state.randomFunc]);
 
+  const shuffleTilesInGrid = useCallback(() => {
+    if (state.gameStatus !== 'playing') {
+      return;
+    }
+
+    // Use game's random function if available, otherwise use Math.random
+    const randomFunc = state.randomFunc || Math.random;
+    const shuffled = shuffleTiles(state.tiles, randomFunc);
+    
+    dispatch({ type: 'SHUFFLE_TILES', newTiles: shuffled });
+    
+    // Track shuffle event
+    trackEvent('tiles_shuffled', {
+      game_mode: state.gameMode,
+      tiles_count: state.tiles.length,
+    });
+  }, [state.tiles, state.gameStatus, state.randomFunc, state.gameMode]);
+
   const setGameMode = useCallback(async (mode: GameMode) => {
     if (state.gameMode !== mode) {
       // Track mode change
@@ -470,6 +496,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     clearSelection,
     submitWord,
     refreshTiles,
+    shuffleTilesInGrid,
     initializeGame,
     resetGame,
     setError,

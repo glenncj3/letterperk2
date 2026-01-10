@@ -106,6 +106,7 @@ export interface GameActions {
   clearSelection: () => void;
   submitWord: () => Promise<void>;
   refreshTiles: () => void;
+  shuffleTilesInGrid: () => void;
   initializeGame: (mode: GameMode, replay?: boolean) => Promise<void>;
   resetGame: () => void;
   setError: (error: string | null) => void;

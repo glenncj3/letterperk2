@@ -1,4 +1,4 @@
-import { HelpCircle, Calendar, Shuffle } from 'lucide-react';
+import { HelpCircle, Calendar, Dices } from 'lucide-react';
 import { useGameState } from '../../contexts/GameContext';
 import { useState, useEffect } from 'react';
 import { useTooltipHandler } from '../../hooks/useTooltipHandler';
@@ -178,7 +178,7 @@ export function GameHeader({ onHelpClick }: GameHeaderProps) {
               `}
               aria-label="Casual mode"
             >
-              <Shuffle className="w-6 h-6" />
+              <Dices className="w-6 h-6" />
             </button>
           </div>
 
