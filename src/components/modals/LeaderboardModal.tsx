@@ -1,10 +1,12 @@
-import { Trophy, X } from 'lucide-react';
+import { Trophy, X, Calendar, Dices, Share2 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { getLeaderboard } from '../../lib/puzzle';
 import { getTodayUTC, formatUTCDateString } from '../../utils/seedGenerator';
 import { LeaderboardEntry } from '../../repositories/interfaces/IGameResultRepository';
 import { getLogger } from '../../services/Logger';
 import { useGameState } from '../../contexts/GameContext';
+import { generateShareText, copyToClipboard } from '../../utils/shareUtils';
+import { trackEvent } from '../../services/analytics';
 
 interface LeaderboardModalProps {
     isOpen: boolean;
@@ -16,6 +18,7 @@ export function LeaderboardModal({ isOpen, onClose }: LeaderboardModalProps) {
     const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [shareFeedback, setShareFeedback] = useState<string>('');
 
     const loadLeaderboard = useCallback(async () => {
         setIsLoading(true);
@@ -50,6 +53,34 @@ export function LeaderboardModal({ isOpen, onClose }: LeaderboardModalProps) {
     const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
         if (e.target === e.currentTarget) {
             handleClose();
+        }
+    };
+
+    const handleShare = async () => {
+        const shareText = generateShareText(state);
+        if (shareText) {
+            const success = await copyToClipboard(shareText);
+            if (success) {
+                setShareFeedback('Copied to clipboard!');
+                setTimeout(() => setShareFeedback(''), 2000);
+                
+                // Track share event
+                trackEvent('share', {
+                    method: 'clipboard',
+                    game_mode: state.gameMode,
+                    total_score: state.totalScore,
+                    word_count: state.wordsCompleted.length,
+                });
+            } else {
+                setShareFeedback('Failed to copy');
+                setTimeout(() => setShareFeedback(''), 2000);
+                
+                // Track share error
+                trackEvent('share_error', {
+                    method: 'clipboard',
+                    error: 'copy_failed',
+                });
+            }
         }
     };
 
@@ -185,6 +216,42 @@ export function LeaderboardModal({ isOpen, onClose }: LeaderboardModalProps) {
                         )}
                     </div>
                 )}
+
+                {/* Action Buttons */}
+                <div className="grid grid-cols-2 gap-3 mt-6">
+                    <button
+                        onClick={() => actions.setGameMode('daily')}
+                        className="py-4 bg-gray-700 hover:bg-gray-800 text-white font-semibold rounded-xl transition-colors flex items-center justify-center"
+                    >
+                        <Calendar className="w-6 h-6" />
+                    </button>
+
+                    <button
+                        onClick={() => actions.setGameMode('casual')}
+                        className="py-4 bg-gray-700 hover:bg-gray-800 text-white font-semibold rounded-xl transition-colors flex items-center justify-center"
+                    >
+                        <Dices className="w-6 h-6" />
+                    </button>
+
+                    <button
+                        onClick={handleShare}
+                        className="py-4 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl transition-colors flex items-center justify-center relative"
+                    >
+                        <Share2 className="w-6 h-6" />
+                        {shareFeedback && (
+                            <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+                                {shareFeedback}
+                            </span>
+                        )}
+                    </button>
+
+                    <button
+                        disabled
+                        className="py-4 bg-gray-400 text-white font-semibold rounded-xl transition-colors flex items-center justify-center cursor-not-allowed opacity-60"
+                    >
+                        <Trophy className="w-6 h-6" />
+                    </button>
+                </div>
             </div>
         </div>
     );
