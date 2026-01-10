@@ -1,6 +1,14 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { getLogger } from '../services/Logger';
 
-export function getSupabase() {
+let supabaseClient: SupabaseClient | null = null;
+
+export function getSupabase(): SupabaseClient | null {
+  // Return existing client if already created (singleton pattern)
+  if (supabaseClient) {
+    return supabaseClient;
+  }
+
   const url = import.meta.env.VITE_SUPABASE_URL;
   const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
@@ -9,5 +17,7 @@ export function getSupabase() {
     return null;
   }
 
-  return createClient(url, key);
+  // Create and cache the client
+  supabaseClient = createClient(url, key);
+  return supabaseClient;
 }
