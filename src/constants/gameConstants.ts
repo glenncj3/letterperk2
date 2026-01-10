@@ -7,7 +7,7 @@ export const TILES_PER_COLUMN = 3;
 
 export const MAX_WORDS_PER_GAME = 4;
 export const MIN_WORD_LENGTH = 2;
-export const TOTAL_TILES = 92;
+export const TOTAL_TILES = 80;
 
 export const PURPLE_BONUS_MIN_LENGTH = 7;
 export const PURPLE_BONUS_MULTIPLIER = 2;
@@ -17,10 +17,10 @@ export const GREEN_BONUS_VALUE = 2;
 export const BLUE_BONUS_VALUE = 5;
 
 export const DEFAULT_BONUS_CONFIG: BonusConfig[] = [
-  { type: 'green', minCount: 4, maxCount: 4 },
+  { type: 'green', minCount: 3, maxCount: 3 },
   { type: 'purple', minCount: 1, maxCount: 1 },
-  { type: 'red', minCount: 1, maxCount: 1 },
-  { type: 'yellow', minCount: 9, maxCount: 9 },
+  { type: 'red', minCount: 2, maxCount: 2 },
+  { type: 'yellow', minCount: 10, maxCount: 10 },
   { type: 'blue', minCount: 5, maxCount: 5 },
   { type: 'black', minCount: 2, maxCount: 2 },
 ];

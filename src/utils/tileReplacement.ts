@@ -81,39 +81,53 @@ export function replaceTilesInColumns(
     tilesNeededPerColumn[col] = TILES_PER_COLUMN - columnTiles.length;
   }
 
-  // Draw tiles sequentially from the single chain and assign to columns
-  for (let col = 0; col < GRID_COLS; col++) {
-    const tilesNeeded = tilesNeededPerColumn[col];
-    
-    for (let i = 0; i < tilesNeeded; i++) {
-      const tileData = singleChain[chainPosition % singleChain.length];
-      chainPosition++;
-
-      // Use negative row numbers so they sort last and go to top after gravity
-      // (gravity sorts descending, so lower numbers = sorted last = placed at top)
-      const newTile = createTile(
-        tileData.letter,
-        tileData.points,
-        -1 - i,
-        col,
-        tileData.bonusType
-      );
-      freshTiles.push(newTile);
+  // Draw tiles in round-robin order: each column draws from positions that belong to it
+  // Track how many tiles each column draws
+  const tilesDrawnPerColumn: [number, number, number] = [0, 0, 0];
+  
+  // Calculate total tiles needed
+  const totalTilesNeeded = tilesNeededPerColumn.reduce((sum, count) => sum + count, 0);
+  
+  // Draw tiles in round-robin fashion (col0, col1, col2, col0, col1, col2, ...)
+  let tilesDrawn = 0;
+  let currentCol = 0;
+  
+  while (tilesDrawn < totalTilesNeeded) {
+    // Find next column that needs tiles
+    while (tilesDrawnPerColumn[currentCol] >= tilesNeededPerColumn[currentCol]) {
+      currentCol = (currentCol + 1) % GRID_COLS;
     }
+    
+    // Draw one tile for this column from the chain position that belongs to it
+    // In round-robin: col0 gets positions 0, 3, 6, 9...; col1 gets 1, 4, 7, 10...; col2 gets 2, 5, 8, 11...
+    // Current position for this column = indices[currentCol] * GRID_COLS + currentCol + tilesDrawnPerColumn[currentCol] * GRID_COLS
+    const colIndex = indices[currentCol] + tilesDrawnPerColumn[currentCol];
+    const chainPos = colIndex * GRID_COLS + currentCol;
+    const tileData = singleChain[chainPos % singleChain.length];
+    
+    tilesDrawnPerColumn[currentCol]++;
+    tilesDrawn++;
+
+    // Use negative row numbers so they sort last and go to top after gravity
+    // (gravity sorts descending, so lower numbers = sorted last = placed at top)
+    const newTile = createTile(
+      tileData.letter,
+      tileData.points,
+      -1 - (tilesDrawnPerColumn[currentCol] - 1),
+      currentCol,
+      tileData.bonusType
+    );
+    freshTiles.push(newTile);
+    
+    // Move to next column for round-robin
+    currentCol = (currentCol + 1) % GRID_COLS;
   }
 
-  // Update indices: since we're drawing from a single chain sequentially,
-  // we need to update all indices to reflect the new chain position
-  // The new position divided by GRID_COLS gives us how many "rounds" we've completed
-  const totalTilesDrawn = chainPosition;
-  const baseIndex = Math.floor(totalTilesDrawn / GRID_COLS);
-  const remainder = totalTilesDrawn % GRID_COLS;
-  
-  // Distribute the remainder across columns
+  // Update indices: add the number of tiles drawn to each column's current index
   const newIndices: [number, number, number] = [
-    baseIndex + (remainder > 0 ? 1 : 0),
-    baseIndex + (remainder > 1 ? 1 : 0),
-    baseIndex + (remainder > 2 ? 1 : 0),
+    indices[0] + tilesDrawnPerColumn[0],
+    indices[1] + tilesDrawnPerColumn[1],
+    indices[2] + tilesDrawnPerColumn[2],
   ];
 
   // Combine remaining tiles with new tiles
