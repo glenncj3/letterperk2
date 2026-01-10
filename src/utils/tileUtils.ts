@@ -61,6 +61,7 @@ export function getEmptyPositions(tiles: Tile[]): Array<{ row: number; col: numb
 /**
  * Validates that all tiles are in valid grid positions.
  * Checks that positions are within bounds and there are no duplicates.
+ * This is a pure function with no side effects.
  * 
  * @param tiles - Tiles to validate
  * @returns Object with validation result and any issues found
@@ -213,10 +214,15 @@ export function shuffleTiles(tiles: Tile[], random: () => number = Math.random):
     });
   });
 
-  // Validate positions after shuffle (in development, log issues)
+  // Validate positions after shuffle (pure function, no side effects)
   const validation = validateTilePositions(shuffledTiles);
-  if (!validation.isValid && process.env.NODE_ENV === 'development') {
-    console.warn('Shuffle validation issues:', validation.issues);
+  if (!validation.isValid) {
+    // Only log in development, and use console.error to ensure it's visible
+    if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
+      console.error('Shuffle validation failed:', validation.issues);
+    }
+    // In production, we could optionally throw or handle the error
+    // For now, we'll just log and continue
   }
 
   // Note: applyGravity removed - shuffle assigns explicit positions, so gravity not needed
