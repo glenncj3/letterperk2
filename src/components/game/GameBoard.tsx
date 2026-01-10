@@ -15,8 +15,6 @@ export function GameBoard() {
   const previousTilePositionsRef = useRef<Map<string, { row: number; col: number }>>(new Map());
   const previousPuzzleSeedRef = useRef<number | null>(null);
   const [newTileIds, setNewTileIds] = useState<Set<string>>(new Set());
-  const [shufflingTileIds, setShufflingTileIds] = useState<Set<string>>(new Set());
-  const shuffleOldPositionsRef = useRef<Map<string, { row: number; col: number }>>(new Map());
   const tileDelaysRef = useRef<Map<string, number>>(new Map());
 
   // Memoize tile lookups for performance
@@ -103,37 +101,24 @@ export function GameBoard() {
     }
 
     const changes = detectTileChanges(state.tiles, previousIds, previousPositions);
-    
-    // Detect shuffle: many tiles moved (3+), no new tiles added
-    // Shuffle moves tiles within columns, so we expect multiple tiles to move at once
-    const isShuffle = changes.newTileIds.size === 0 && changes.movedTileIds.size >= 3;
+    const tilesToAnimate = new Set([...changes.newTileIds, ...changes.movedTileIds]);
 
-    if (isShuffle) {
-      // This is a shuffle - use shuffle animation
-      const shuffleOldPositions = new Map<string, { row: number; col: number }>();
-      changes.movedTileIds.forEach(id => {
-        const oldPos = previousPositions.get(id);
-        if (oldPos) {
-          shuffleOldPositions.set(id, oldPos);
-        }
-      });
-
-      shuffleOldPositionsRef.current = shuffleOldPositions;
-      setShufflingTileIds(changes.movedTileIds);
-
+    if (tilesToAnimate.size > 0) {
       const delays = generateAnimationDelays(
-        state.tiles.filter(t => changes.movedTileIds.has(t.id)),
+        state.tiles.filter(t => tilesToAnimate.has(t.id)),
         previousPositions
       );
 
+      // Update delays map
       delays.forEach((delay, id) => {
         tileDelaysRef.current.set(id, delay);
       });
 
+      setNewTileIds(tilesToAnimate);
+
       const timer = setTimeout(() => {
-        setShufflingTileIds(new Set());
-        shuffleOldPositionsRef.current.clear();
-        changes.movedTileIds.forEach(id => tileDelaysRef.current.delete(id));
+        setNewTileIds(new Set());
+        tilesToAnimate.forEach(id => tileDelaysRef.current.delete(id));
       }, 1000);
 
       // Update tracking refs
@@ -141,34 +126,6 @@ export function GameBoard() {
       previousTilePositionsRef.current = createPositionMap(state.tiles);
 
       return () => clearTimeout(timer);
-    } else {
-      // Normal tile changes - use fall animation
-      const tilesToAnimate = new Set([...changes.newTileIds, ...changes.movedTileIds]);
-
-      if (tilesToAnimate.size > 0) {
-        const delays = generateAnimationDelays(
-          state.tiles.filter(t => tilesToAnimate.has(t.id)),
-          previousPositions
-        );
-
-        // Update delays map
-        delays.forEach((delay, id) => {
-          tileDelaysRef.current.set(id, delay);
-        });
-
-        setNewTileIds(tilesToAnimate);
-
-        const timer = setTimeout(() => {
-          setNewTileIds(new Set());
-          tilesToAnimate.forEach(id => tileDelaysRef.current.delete(id));
-        }, 1000);
-
-        // Update tracking refs
-        previousTileIdsRef.current = currentTileIds;
-        previousTilePositionsRef.current = createPositionMap(state.tiles);
-
-        return () => clearTimeout(timer);
-      }
     }
 
     // Update tracking refs even if no animations
@@ -204,11 +161,8 @@ export function GameBoard() {
                         tile={tile}
                         isSelected={isTileSelected(tile.id)}
                         onClick={() => handleTileClick(tile.id)}
-                        isNew={newTileIds.has(tile.id) && !shufflingTileIds.has(tile.id)}
-                        animationDelay={(newTileIds.has(tile.id) || shufflingTileIds.has(tile.id)) ? (tileDelaysRef.current.get(tile.id) || 0) : 0}
-                        isShuffling={shufflingTileIds.has(tile.id)}
-                        oldRow={shufflingTileIds.has(tile.id) ? shuffleOldPositionsRef.current.get(tile.id)?.row : undefined}
-                        oldCol={shufflingTileIds.has(tile.id) ? shuffleOldPositionsRef.current.get(tile.id)?.col : undefined}
+                        isNew={newTileIds.has(tile.id)}
+                        animationDelay={newTileIds.has(tile.id) ? (tileDelaysRef.current.get(tile.id) || 0) : 0}
                       />
                     ) : (
                       <div className="w-full h-full rounded-full bg-gray-100" />

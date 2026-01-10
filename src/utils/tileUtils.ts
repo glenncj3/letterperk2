@@ -102,56 +102,80 @@ function generateDerangement(length: number, random: () => number): number[] {
 }
 
 /**
- * Shuffles tiles within each column, keeping tiles in their respective columns
- * but randomizing their row positions. Guarantees that each tile moves to a
- * different position (no tile stays in its original position).
+ * Shuffles tiles across the entire grid, randomizing their positions within
+ * the 3x3 grid. Guarantees that each tile moves to a different position
+ * (no tile stays in its original position).
  * 
  * @param tiles - Array of tiles to shuffle
  * @param random - Random function to use for shuffling (defaults to Math.random)
- * @returns New array of tiles with shuffled row positions
+ * @returns New array of tiles with shuffled positions across the grid
  */
 export function shuffleTiles(tiles: Tile[], random: () => number = Math.random): Tile[] {
-  const shuffledTiles: Tile[] = [];
+  if (tiles.length === 0) return tiles;
 
-  // Group tiles by column and shuffle each column independently
-  for (let col = 0; col < GRID_COLS; col++) {
-    const columnTiles = tiles.filter(tile => tile.col === col);
+  // Get all available positions in the grid
+  const allPositions: Array<{ row: number; col: number }> = [];
+  for (let row = 0; row < GRID_ROWS; row++) {
+    for (let col = 0; col < GRID_COLS; col++) {
+      allPositions.push({ row, col });
+    }
+  }
+
+  // Store current positions of each tile
+  const tileCurrentPositions = new Map<string, { row: number; col: number }>();
+  tiles.forEach(tile => {
+    tileCurrentPositions.set(tile.id, { row: tile.row, col: tile.col });
+  });
+
+  // Shuffle all grid positions
+  const shuffledPositions = [...allPositions];
+  for (let i = shuffledPositions.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [shuffledPositions[i], shuffledPositions[j]] = [shuffledPositions[j], shuffledPositions[i]];
+  }
+
+  // Generate a derangement to ensure no tile stays in its original position
+  const derangement = generateDerangement(tiles.length, random);
+
+  // Assign tiles to positions: use derangement to map tiles to shuffled positions
+  // If a tile would end up in its original position, we'll adjust
+  const shuffledTiles: Tile[] = [];
+  const usedPositions = new Set<string>();
+  
+  tiles.forEach((tile, index) => {
+    const currentPos = tileCurrentPositions.get(tile.id)!;
+    const currentPosKey = `${currentPos.row}-${currentPos.col}`;
     
-    if (columnTiles.length === 0) continue;
+    // Use derangement to select a position index
+    // derangement[index] gives us a different index, ensuring movement
+    let positionIndex = derangement[index] % shuffledPositions.length;
+    let targetPosition = shuffledPositions[positionIndex];
+    let targetPosKey = `${targetPosition.row}-${targetPosition.col}`;
     
-    // Sort tiles by row descending (same way gravity does) to get current order
-    // This gives us the current position order from bottom to top
-    const sortedByRow = [...columnTiles].sort((a, b) => b.row - a.row);
-    
-    // Generate a derangement of positions
-    // This ensures tile at position i goes to a different position
-    const derangement = generateDerangement(sortedByRow.length, random);
-    
-    // Calculate the target rows (from bottom: GRID_ROWS-1, GRID_ROWS-2, ...)
-    const targetRows: number[] = [];
-    for (let i = 0; i < sortedByRow.length; i++) {
-      targetRows.push(GRID_ROWS - 1 - i);
+    // If this would place the tile in its original position, find a different one
+    if (targetPosKey === currentPosKey || usedPositions.has(targetPosKey)) {
+      // Find the first available position that's different from current
+      for (let i = 0; i < shuffledPositions.length; i++) {
+        const candidateIndex = (positionIndex + i) % shuffledPositions.length;
+        const candidate = shuffledPositions[candidateIndex];
+        const candidateKey = `${candidate.row}-${candidate.col}`;
+        
+        if (candidateKey !== currentPosKey && !usedPositions.has(candidateKey)) {
+          targetPosition = candidate;
+          targetPosKey = candidateKey;
+          break;
+        }
+      }
     }
     
-    // Create mapping from tile ID to new target row
-    const tileToNewRow = new Map<string, number>();
-    sortedByRow.forEach((tile, currentPosition) => {
-      // The derangement tells us which final position this tile should occupy
-      const newPosition = derangement[currentPosition];
-      // Get the target row for that position
-      const newRow = targetRows[newPosition];
-      tileToNewRow.set(tile.id, newRow);
-    });
+    usedPositions.add(targetPosKey);
     
-    // Assign each tile to its new row position
-    columnTiles.forEach((tile) => {
-      const newRow = tileToNewRow.get(tile.id)!;
-      shuffledTiles.push({
-        ...tile,
-        row: newRow,
-      });
+    shuffledTiles.push({
+      ...tile,
+      row: targetPosition.row,
+      col: targetPosition.col,
     });
-  }
+  });
 
   // Apply gravity to ensure proper positioning (this will handle any gaps)
   return applyGravity(shuffledTiles);
