@@ -10,6 +10,15 @@ export interface AnimationSetup {
   delays: Map<string, number>;
 }
 
+export interface ShuffleAnimationData {
+  tileId: string;
+  fromRow: number;
+  fromCol: number;
+  toRow: number;
+  toCol: number;
+  delay: number;
+}
+
 /**
  * Detects which tiles are new and which have moved positions.
  * 
@@ -106,5 +115,39 @@ export function createPositionMap(tiles: Tile[]): Map<string, { row: number; col
     positions.set(tile.id, { row: tile.row, col: tile.col });
   });
   return positions;
+}
+
+/**
+ * Sets up shuffle animation for tiles moving to new positions.
+ * Generates staggered delays so tiles move one at a time quickly.
+ * 
+ * @param currentTiles - Current tiles after shuffle
+ * @param previousPositions - Previous positions before shuffle
+ * @returns Array of shuffle animation data for each moved tile
+ */
+export function setupShuffleAnimation(
+  currentTiles: Tile[],
+  previousPositions: Map<string, { row: number; col: number }>
+): ShuffleAnimationData[] {
+  const animations: ShuffleAnimationData[] = [];
+  let delayIndex = 0;
+  const delayIncrement = 30; // 30ms between each tile movement for quick sequential animation
+
+  currentTiles.forEach(tile => {
+    const previousPos = previousPositions.get(tile.id);
+    if (previousPos && (previousPos.row !== tile.row || previousPos.col !== tile.col)) {
+      animations.push({
+        tileId: tile.id,
+        fromRow: previousPos.row,
+        fromCol: previousPos.col,
+        toRow: tile.row,
+        toCol: tile.col,
+        delay: delayIndex * delayIncrement,
+      });
+      delayIndex++;
+    }
+  });
+
+  return animations;
 }
 

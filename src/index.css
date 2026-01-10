@@ -75,6 +75,17 @@ img {
   }
 }
 
+@keyframes tile-shuffle {
+  0% {
+    transform: translate(var(--shuffle-from-x, 0), var(--shuffle-from-y, 0));
+    z-index: 20;
+  }
+  100% {
+    transform: translate(0, 0);
+    z-index: 1;
+  }
+}
+
 @layer utilities {
   .animate-tile-fall {
     animation: tile-fall 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
@@ -88,5 +99,10 @@ img {
   
   .animate-glimmer {
     animation: glimmer 2s ease-in-out infinite;
+  }
+  
+  .animate-tile-shuffle {
+    animation: tile-shuffle 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    position: relative;
   }
 }

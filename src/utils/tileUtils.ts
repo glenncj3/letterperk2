@@ -59,6 +59,42 @@ export function getEmptyPositions(tiles: Tile[]): Array<{ row: number; col: numb
 }
 
 /**
+ * Validates that all tiles are in valid grid positions.
+ * Checks that positions are within bounds and there are no duplicates.
+ * 
+ * @param tiles - Tiles to validate
+ * @returns Object with validation result and any issues found
+ */
+export function validateTilePositions(tiles: Tile[]): { isValid: boolean; issues: string[] } {
+  const issues: string[] = [];
+  const positionMap = new Map<string, string>(); // position -> tileId
+
+  tiles.forEach(tile => {
+    // Check bounds
+    if (tile.row < 0 || tile.row >= GRID_ROWS) {
+      issues.push(`Tile ${tile.id} has invalid row ${tile.row} (must be 0-${GRID_ROWS - 1})`);
+    }
+    if (tile.col < 0 || tile.col >= GRID_COLS) {
+      issues.push(`Tile ${tile.id} has invalid col ${tile.col} (must be 0-${GRID_COLS - 1})`);
+    }
+
+    // Check for duplicate positions
+    const posKey = `${tile.row}-${tile.col}`;
+    if (positionMap.has(posKey)) {
+      const otherTileId = positionMap.get(posKey);
+      issues.push(`Tiles ${tile.id} and ${otherTileId} are both at position (${tile.row}, ${tile.col})`);
+    } else {
+      positionMap.set(posKey, tile.id);
+    }
+  });
+
+  return {
+    isValid: issues.length === 0,
+    issues,
+  };
+}
+
+/**
  * Generates a derangement (permutation with no fixed points) of indices.
  * Ensures that no element ends up in its original position.
  * 
@@ -177,6 +213,13 @@ export function shuffleTiles(tiles: Tile[], random: () => number = Math.random):
     });
   });
 
-  // Apply gravity to ensure proper positioning (this will handle any gaps)
-  return applyGravity(shuffledTiles);
+  // Validate positions after shuffle (in development, log issues)
+  const validation = validateTilePositions(shuffledTiles);
+  if (!validation.isValid && process.env.NODE_ENV === 'development') {
+    console.warn('Shuffle validation issues:', validation.issues);
+  }
+
+  // Note: applyGravity removed - shuffle assigns explicit positions, so gravity not needed
+  // and it was causing unwanted settle animation
+  return shuffledTiles;
 }
