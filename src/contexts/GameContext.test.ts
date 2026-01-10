@@ -27,15 +27,16 @@ describe('GameContext - UTC date consistency', () => {
     // They should match
     expect(dateString).toBe(dateString2);
     expect(dateString).toBe('2025-01-15');
-    expect(seed).toBe(11525);
+    expect(seed).toBe(111525);
   });
 
   it('should produce same date string for puzzle and leaderboard queries', () => {
+    // Test cases that all fall on the same EST day
     const testCases = [
-      '2025-01-15T00:00:00Z',
-      '2025-01-15T12:00:00Z',
-      '2025-01-15T23:59:59Z',
-      '2025-12-31T12:00:00Z',
+      '2025-01-15T05:00:00Z', // Midnight EST
+      '2025-01-15T12:00:00Z', // Midday EST
+      '2025-01-15T23:00:00Z', // Evening EST
+      '2025-12-31T12:00:00Z', // Midday EST on Dec 31
     ];
 
     testCases.forEach(isoString => {
@@ -51,21 +52,21 @@ describe('GameContext - UTC date consistency', () => {
     });
   });
 
-  it('should handle date boundaries correctly (midnight UTC)', () => {
-    // Just before midnight UTC
-    vi.setSystemTime(new Date('2025-01-15T23:59:59Z'));
+  it('should handle date boundaries correctly (midnight EST)', () => {
+    // Just before midnight EST (04:59 UTC on Jan 15 = 23:59 EST on Jan 14)
+    vi.setSystemTime(new Date('2025-01-15T04:59:59Z'));
     const date1 = formatUTCDateString(getTodayUTC());
     const seed1 = dateToSeed(getTodayUTC());
 
-    // Just after midnight UTC (next day)
-    vi.setSystemTime(new Date('2025-01-16T00:00:00Z'));
+    // Just after midnight EST (05:00 UTC on Jan 15 = 00:00 EST on Jan 15)
+    vi.setSystemTime(new Date('2025-01-15T05:00:00Z'));
     const date2 = formatUTCDateString(getTodayUTC());
     const seed2 = dateToSeed(getTodayUTC());
 
-    expect(date1).toBe('2025-01-15');
-    expect(date2).toBe('2025-01-16');
-    expect(seed1).toBe(11525);
-    expect(seed2).toBe(11625);
+    expect(date1).toBe('2025-01-14');
+    expect(date2).toBe('2025-01-15');
+    expect(seed1).toBe(111425);
+    expect(seed2).toBe(111525);
   });
 });
 

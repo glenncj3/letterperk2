@@ -193,11 +193,33 @@ export function dateToSeed(date: Date): number {
 }
 
 /**
- * Gets the current UTC date.
- * This is simpler and more reliable than timezone-specific calculations.
+ * Gets the current date based on EST timezone (midnight EST).
+ * Returns a Date object representing "today" in EST, but uses UTC components
+ * for consistent date formatting across timezones.
+ * 
+ * EST is UTC-5, EDT is UTC-4. The function automatically handles daylight saving time.
  */
 export function getTodayUTC(): Date {
-  return new Date();
+  const now = new Date();
+  
+  // Get the current time in EST/EDT
+  // Use Intl.DateTimeFormat to get the date components in EST timezone
+  const estFormatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+  
+  // Format the date in EST timezone (e.g., "01/15/2025")
+  const estDateParts = estFormatter.formatToParts(now);
+  const estYear = parseInt(estDateParts.find(p => p.type === 'year')!.value, 10);
+  const estMonth = parseInt(estDateParts.find(p => p.type === 'month')!.value, 10) - 1; // Month is 0-indexed
+  const estDay = parseInt(estDateParts.find(p => p.type === 'day')!.value, 10);
+  
+  // Create a Date object with these EST date components, but in UTC
+  // This ensures formatUTCDateString will use the EST date
+  return new Date(Date.UTC(estYear, estMonth, estDay));
 }
 
 /**
