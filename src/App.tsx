@@ -6,6 +6,7 @@ import { GameBoard } from './components/game/GameBoard';
 import { GameControls } from './components/game/GameControls';
 import { HowToPlayModal } from './components/modals/HowToPlayModal';
 import { GameOverModal } from './components/modals/GameOverModal';
+import { DailyAlreadyPlayedModal } from './components/modals/DailyAlreadyPlayedModal';
 
 function GameContainer() {
   const { state, actions } = useGameState();
@@ -46,6 +47,12 @@ function GameContainer() {
       <GameOverModal
         isOpen={state.gameStatus === 'gameover'}
         onPlayAgain={handlePlayAgain}
+      />
+
+      <DailyAlreadyPlayedModal
+        isOpen={state.dailyGameAlreadyPlayed !== null && state.gameStatus !== 'gameover'}
+        onClose={() => actions.clearDailyGameAlreadyPlayed()}
+        score={state.dailyGameAlreadyPlayed?.score ?? 0}
       />
 
       {state.error && (

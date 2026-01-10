@@ -12,6 +12,12 @@ import { GameInitializer } from '../services/GameInitializer';
 import { ErrorHandler, ErrorType, GameError } from '../utils/errors';
 import { getLogger } from '../services/Logger';
 import { trackEvent } from '../services/analytics';
+import { 
+  markDailyAsPlayed, 
+  getDailyGameResult, 
+  cleanupOldDailyRecords,
+  getTodayDateString 
+} from '../utils/dailyGameStorage';
 
 interface GameContextValue {
   state: GameState;
@@ -41,6 +47,7 @@ const initialState: GameState = {
   isLoading: true,
   gameStartedAt: undefined,
   tooltip: null,
+  dailyGameAlreadyPlayed: null,
 };
 
 type GameAction =
@@ -60,6 +67,7 @@ type GameAction =
   | { type: 'SET_ERROR'; error: string | null }
   | { type: 'SET_LOADING'; isLoading: boolean }
   | { type: 'SET_TOOLTIP'; tooltip: { title: string; description: string } | null }
+  | { type: 'SET_DAILY_GAME_ALREADY_PLAYED'; result: { score: number; wordCount: number; puzzleDate: string } | null }
   | { type: 'RESET_GAME' };
 
 function gameReducer(state: GameState, action: GameAction): GameState {
@@ -185,8 +193,11 @@ function gameReducer(state: GameState, action: GameAction): GameState {
     case 'SET_TOOLTIP':
       return { ...state, tooltip: action.tooltip };
 
+    case 'SET_DAILY_GAME_ALREADY_PLAYED':
+      return { ...state, dailyGameAlreadyPlayed: action.result };
+
     case 'RESET_GAME':
-      return { ...initialState, gameMode: state.gameMode };
+      return { ...initialState, gameMode: state.gameMode, dailyGameAlreadyPlayed: state.dailyGameAlreadyPlayed };
 
     default:
       return state;
@@ -197,6 +208,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(gameReducer, initialState);
 
   useEffect(() => {
+    // Cleanup old daily game records (older than 48 hours)
+    cleanupOldDailyRecords();
+    
     // Dictionary will load lazily on first word validation
     // Just mark loading as complete
     dispatch({ type: 'SET_LOADING', isLoading: false });
@@ -229,6 +243,15 @@ export function GameProvider({ children }: { children: ReactNode }) {
         puzzleDate: state.puzzle.date,
         seed: state.puzzle.seed
       });
+      
+      // Mark daily game as played when it ends
+      if (state.gameMode === 'daily') {
+        markDailyAsPlayed(
+          state.puzzle.date,
+          state.totalScore,
+          state.wordsCompleted.length
+        );
+      }
       
       // Calculate duration if we have a start time
       const durationSeconds = state.gameStartedAt 
@@ -298,6 +321,26 @@ export function GameProvider({ children }: { children: ReactNode }) {
   }, [state.gameStatus, state.puzzle, state.totalScore, state.wordsCompleted, state.gameMode, state.gameStartedAt]);
 
   const initializeGame = useCallback(async (mode: GameMode, replay = false) => {
+    // Check if daily game has already been played
+    if (mode === 'daily') {
+      const today = getTodayDateString();
+      const result = getDailyGameResult(today);
+      if (result) {
+        dispatch({
+          type: 'SET_DAILY_GAME_ALREADY_PLAYED',
+          result: {
+            score: result.score,
+            wordCount: result.wordCount,
+            puzzleDate: result.puzzleDate,
+          },
+        });
+        dispatch({ type: 'SET_LOADING', isLoading: false });
+        return;
+      }
+    }
+
+    // Clear the daily game already played state when starting a new game
+    dispatch({ type: 'SET_DAILY_GAME_ALREADY_PLAYED', result: null });
     dispatch({ type: 'SET_LOADING', isLoading: true });
     dispatch({ type: 'RESET_GAME' });
     dispatch({ type: 'SET_GAME_MODE', mode });
@@ -484,6 +527,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
         to_mode: mode,
       });
     }
+    // Clear daily game already played state when switching modes
+    dispatch({ type: 'SET_DAILY_GAME_ALREADY_PLAYED', result: null });
     await initializeGame(mode);
   }, [initializeGame, state.gameMode]);
 
@@ -497,6 +542,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   const clearError = useCallback(() => {
     dispatch({ type: 'SET_ERROR', error: null });
+  }, []);
+
+  const clearDailyGameAlreadyPlayed = useCallback(() => {
+    dispatch({ type: 'SET_DAILY_GAME_ALREADY_PLAYED', result: null });
   }, []);
 
   const setTooltip = useCallback((tooltip: { title: string; description: string } | null) => {
@@ -517,6 +566,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     setError,
     clearError,
     setTooltip,
+    clearDailyGameAlreadyPlayed,
   };
 
   return (

@@ -45,6 +45,12 @@ export function GameOverModal({ isOpen, onPlayAgain }: GameOverModalProps) {
     }
   };
 
+  // Check if daily game button should be disabled
+  // Disabled if: (1) just finished a daily game, or (2) daily game already played today
+  const isDailyGameDisabled = 
+    (state.gameMode === 'daily' && state.gameStatus === 'gameover') ||
+    state.dailyGameAlreadyPlayed !== null;
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-2xl max-w-md w-full p-8">
@@ -69,7 +75,12 @@ export function GameOverModal({ isOpen, onPlayAgain }: GameOverModalProps) {
         <div className="grid grid-cols-2 gap-3">
           <button
             onClick={() => actions.setGameMode('daily')}
-            className="py-4 bg-gray-700 hover:bg-gray-800 text-white font-semibold rounded-xl transition-colors flex items-center justify-center"
+            disabled={isDailyGameDisabled}
+            className={`py-4 font-semibold rounded-xl transition-colors flex items-center justify-center ${
+              isDailyGameDisabled
+                ? 'bg-gray-400 text-white cursor-not-allowed opacity-60'
+                : 'bg-gray-700 hover:bg-gray-800 text-white'
+            }`}
           >
             <Calendar className="w-6 h-6" />
           </button>

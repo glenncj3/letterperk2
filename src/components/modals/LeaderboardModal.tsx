@@ -1,4 +1,4 @@
-import { Trophy, X, Calendar, Dices, Share2 } from 'lucide-react';
+import { Trophy, Calendar, Dices, Share2 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { getLeaderboard } from '../../lib/puzzle';
 import { getTodayUTC, formatUTCDateString } from '../../utils/seedGenerator';
@@ -11,9 +11,10 @@ import { trackEvent } from '../../services/analytics';
 interface LeaderboardModalProps {
     isOpen: boolean;
     onClose: () => void;
+    openedFromDailyAlreadyPlayed?: boolean;
 }
 
-export function LeaderboardModal({ isOpen, onClose }: LeaderboardModalProps) {
+export function LeaderboardModal({ isOpen, onClose, openedFromDailyAlreadyPlayed = false }: LeaderboardModalProps) {
     const { state, actions } = useGameState();
     const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -110,14 +111,6 @@ export function LeaderboardModal({ isOpen, onClose }: LeaderboardModalProps) {
                 className="bg-white rounded-2xl max-w-[25.2rem] w-full p-8 relative"
                 onClick={(e) => e.stopPropagation()}
             >
-                <button
-                    onClick={handleClose}
-                    className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
-                    aria-label="Close"
-                >
-                    <X className="w-6 h-6" />
-                </button>
-
                 <div className="flex items-center justify-center gap-3 mb-6">
                     <Trophy className="w-8 h-8 text-yellow-500" />
                     <h2 className="text-3xl font-bold text-gray-900">Daily Top 10</h2>
@@ -218,40 +211,101 @@ export function LeaderboardModal({ isOpen, onClose }: LeaderboardModalProps) {
                 )}
 
                 {/* Action Buttons */}
-                <div className="grid grid-cols-2 gap-3 mt-6">
-                    <button
-                        onClick={() => actions.setGameMode('daily')}
-                        className="py-4 bg-gray-700 hover:bg-gray-800 text-white font-semibold rounded-xl transition-colors flex items-center justify-center"
-                    >
-                        <Calendar className="w-6 h-6" />
-                    </button>
+                {openedFromDailyAlreadyPlayed ? (
+                    // Simplified button layout when opened from DailyAlreadyPlayedModal
+                    <div className="mt-6">
+                        <button
+                            onClick={() => {
+                                // Check if a casual game is already in progress
+                                const isCasualGameInProgress = state.gameMode === 'casual' && state.gameStatus === 'playing';
+                                
+                                // Clear daily game already played state (closes DailyAlreadyPlayedModal if open)
+                                actions.clearDailyGameAlreadyPlayed();
+                                
+                                if (isCasualGameInProgress) {
+                                    // Just close the modal, don't restart the game
+                                    // Use onClose() directly to avoid resetting to daily mode
+                                    onClose();
+                                } else {
+                                    // Start a new casual game
+                                    // Use onClose() directly to avoid resetting to daily mode
+                                    actions.setGameMode('casual');
+                                    onClose();
+                                }
+                            }}
+                            className="w-full py-4 bg-gray-700 hover:bg-gray-800 text-white font-semibold rounded-xl transition-colors flex items-center justify-center"
+                        >
+                            <Dices className="w-6 h-6" />
+                        </button>
+                    </div>
+                ) : (
+                    // Full button layout when opened from other modals
+                    <div className="grid grid-cols-2 gap-3 mt-6">
+                        {(() => {
+                            // Check if daily game button should be disabled
+                            // Disabled if: (1) just finished a daily game, or (2) daily game already played today
+                            const isDailyGameDisabled = 
+                                (state.gameMode === 'daily' && state.gameStatus === 'gameover') ||
+                                state.dailyGameAlreadyPlayed !== null;
+                            return (
+                                <button
+                                    onClick={() => actions.setGameMode('daily')}
+                                    disabled={isDailyGameDisabled}
+                                    className={`py-4 font-semibold rounded-xl transition-colors flex items-center justify-center ${
+                                        isDailyGameDisabled
+                                            ? 'bg-gray-400 text-white cursor-not-allowed opacity-60'
+                                            : 'bg-gray-700 hover:bg-gray-800 text-white'
+                                    }`}
+                                >
+                                    <Calendar className="w-6 h-6" />
+                                </button>
+                            );
+                        })()}
 
-                    <button
-                        onClick={() => actions.setGameMode('casual')}
-                        className="py-4 bg-gray-700 hover:bg-gray-800 text-white font-semibold rounded-xl transition-colors flex items-center justify-center"
-                    >
-                        <Dices className="w-6 h-6" />
-                    </button>
+                        <button
+                            onClick={() => {
+                                // Check if a casual game is already in progress
+                                const isCasualGameInProgress = state.gameMode === 'casual' && state.gameStatus === 'playing';
+                                
+                                // Clear daily game already played state (closes DailyAlreadyPlayedModal if open)
+                                actions.clearDailyGameAlreadyPlayed();
+                                
+                                if (isCasualGameInProgress) {
+                                    // Just close the modal, don't restart the game
+                                    // Use onClose() directly to avoid resetting to daily mode
+                                    onClose();
+                                } else {
+                                    // Start a new casual game
+                                    // Use onClose() directly to avoid resetting to daily mode
+                                    actions.setGameMode('casual');
+                                    onClose();
+                                }
+                            }}
+                            className="py-4 bg-gray-700 hover:bg-gray-800 text-white font-semibold rounded-xl transition-colors flex items-center justify-center"
+                        >
+                            <Dices className="w-6 h-6" />
+                        </button>
 
-                    <button
-                        onClick={handleShare}
-                        className="py-4 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl transition-colors flex items-center justify-center relative"
-                    >
-                        <Share2 className="w-6 h-6" />
-                        {shareFeedback && (
-                            <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
-                                {shareFeedback}
-                            </span>
-                        )}
-                    </button>
+                        <button
+                            onClick={handleShare}
+                            className="py-4 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl transition-colors flex items-center justify-center relative"
+                        >
+                            <Share2 className="w-6 h-6" />
+                            {shareFeedback && (
+                                <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+                                    {shareFeedback}
+                                </span>
+                            )}
+                        </button>
 
-                    <button
-                        disabled
-                        className="py-4 bg-gray-400 text-white font-semibold rounded-xl transition-colors flex items-center justify-center cursor-not-allowed opacity-60"
-                    >
-                        <Trophy className="w-6 h-6" />
-                    </button>
-                </div>
+                        <button
+                            disabled
+                            className="py-4 bg-gray-400 text-white font-semibold rounded-xl transition-colors flex items-center justify-center cursor-not-allowed opacity-60"
+                        >
+                            <Trophy className="w-6 h-6" />
+                        </button>
+                    </div>
+                )}
             </div>
         </div>
     );

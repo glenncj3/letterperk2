@@ -97,6 +97,7 @@ export interface GameState {
   isLoading: boolean;
   gameStartedAt?: string; // ISO timestamp when game started
   tooltip: { title: string; description: string } | null;
+  dailyGameAlreadyPlayed: { score: number; wordCount: number; puzzleDate: string } | null;
 }
 
 export interface GameActions {
@@ -113,4 +114,5 @@ export interface GameActions {
   setError: (error: string | null) => void;
   clearError: () => void;
   setTooltip: (tooltip: { title: string; description: string } | null) => void;
+  clearDailyGameAlreadyPlayed: () => void;
 }
