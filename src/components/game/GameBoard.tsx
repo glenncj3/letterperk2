@@ -114,6 +114,12 @@ export function GameBoard() {
     if (isShuffle) {
       // This is a shuffle - use shuffle animation instead of drop animation
       isShufflingRef.current = true;
+      
+      // CRITICAL: Clear newTileIds immediately to prevent drop animation from triggering
+      // after shuffle completes (when isShufflingRef becomes false)
+      setNewTileIds(new Set());
+      tileDelaysRef.current.clear();
+      
       const shuffleAnims = setupShuffleAnimation(state.tiles, previousPositions);
       
       // Convert to map for easy lookup
@@ -128,6 +134,11 @@ export function GameBoard() {
       
       setShuffleAnimations(shuffleMap);
 
+      // Update tracking refs IMMEDIATELY to prevent drop animation from triggering
+      // after shuffle completes
+      previousTileIdsRef.current = currentTileIds;
+      previousTilePositionsRef.current = createPositionMap(state.tiles);
+
       // Clear shuffle animation after it completes
       const maxDelay = Math.max(...shuffleAnims.map(a => a.delay), 0);
       const timer = setTimeout(() => {
@@ -135,45 +146,48 @@ export function GameBoard() {
         isShufflingRef.current = false;
       }, 400 + maxDelay); // Animation duration (400ms) + max delay
 
-      // Update tracking refs
-      previousTileIdsRef.current = currentTileIds;
-      previousTilePositionsRef.current = createPositionMap(state.tiles);
-
       return () => clearTimeout(timer);
     } else {
       // Normal tile changes - use drop animation
-      isShufflingRef.current = false;
-      const tilesToAnimate = new Set([...changes.newTileIds, ...changes.movedTileIds]);
+      // BUT: Don't trigger drop animation if we're currently shuffling
+      if (!isShufflingRef.current) {
+        isShufflingRef.current = false;
+        const tilesToAnimate = new Set([...changes.newTileIds, ...changes.movedTileIds]);
 
-      if (tilesToAnimate.size > 0) {
-        const delays = generateAnimationDelays(
-          state.tiles.filter(t => tilesToAnimate.has(t.id)),
-          previousPositions
-        );
+        if (tilesToAnimate.size > 0) {
+          const delays = generateAnimationDelays(
+            state.tiles.filter(t => tilesToAnimate.has(t.id)),
+            previousPositions
+          );
 
-        // Update delays map
-        delays.forEach((delay, id) => {
-          tileDelaysRef.current.set(id, delay);
-        });
+          // Update delays map
+          delays.forEach((delay, id) => {
+            tileDelaysRef.current.set(id, delay);
+          });
 
-        setNewTileIds(tilesToAnimate);
+          setNewTileIds(tilesToAnimate);
 
-        const timer = setTimeout(() => {
-          setNewTileIds(new Set());
-          tilesToAnimate.forEach(id => tileDelaysRef.current.delete(id));
-        }, 1000);
+          const timer = setTimeout(() => {
+            setNewTileIds(new Set());
+            tilesToAnimate.forEach(id => tileDelaysRef.current.delete(id));
+          }, 1000);
 
-        // Update tracking refs
+          // Update tracking refs
+          previousTileIdsRef.current = currentTileIds;
+          previousTilePositionsRef.current = createPositionMap(state.tiles);
+
+          return () => clearTimeout(timer);
+        } else {
+          // No tiles to animate, but still update refs
+          previousTileIdsRef.current = currentTileIds;
+          previousTilePositionsRef.current = createPositionMap(state.tiles);
+        }
+      } else {
+        // We're shuffling, so just update refs without triggering drop animation
         previousTileIdsRef.current = currentTileIds;
         previousTilePositionsRef.current = createPositionMap(state.tiles);
-
-        return () => clearTimeout(timer);
       }
     }
-
-    // Update tracking refs even if no animations
-    previousTileIdsRef.current = currentTileIds;
-    previousTilePositionsRef.current = createPositionMap(state.tiles);
   }, [state.tiles]);
 
   const handleTileClick = (tileId: string) => {
