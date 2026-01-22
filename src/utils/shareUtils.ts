@@ -15,13 +15,33 @@ const BONUS_EMOJI_MAP: Record<BonusType, string> = {
 const NORMAL_EMOJI = '⬜';
 
 /**
- * Formats a date as MM/DD/YYYY
+ * Formats a date as MM/DD/YYYY in EST timezone.
+ * The dateString is in YYYY-MM-DD format and represents a date in EST.
+ * We add 5 hours (EST offset) to ensure it displays correctly at midnight EST.
+ * Intl.DateTimeFormat automatically handles DST (EDT = UTC-4, EST = UTC-5).
  */
 function formatDate(dateString: string): string {
-    const date = new Date(dateString);
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const year = date.getFullYear();
+    // Parse the date string (YYYY-MM-DD) as midnight UTC
+    const date = new Date(dateString + 'T00:00:00Z');
+    
+    // Add 5 hours to account for EST offset (will be 4 hours during DST, but Intl handles this)
+    // This ensures that at midnight EST (05:00 UTC), the date displays correctly
+    const dateWithOffset = new Date(date.getTime() + 5 * 60 * 60 * 1000);
+    
+    // Format using EST timezone to get the correct date components
+    // This automatically handles DST transitions
+    const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'America/New_York',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+    });
+    
+    const parts = formatter.formatToParts(dateWithOffset);
+    const month = parts.find(p => p.type === 'month')!.value;
+    const day = parts.find(p => p.type === 'day')!.value;
+    const year = parts.find(p => p.type === 'year')!.value;
+    
     return `${month}/${day}/${year}`;
 }
 
